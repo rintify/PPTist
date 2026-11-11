@@ -16,6 +16,9 @@ import { LOCALSTORAGE_KEY_DISCARDED_DB } from '@/configs/storage'
 import { deleteDiscardedDB } from '@/utils/database'
 import { isPC } from '@/utils/common'
 import api from '@/services'
+import { decrypt } from '@/utils/crypto'
+import message from '@/utils/message'
+import type { Slide, SlideTheme } from '@/types/slides'
 
 import Editor from './views/Editor/index.vue'
 import Screen from './views/Screen/index.vue'
@@ -38,6 +41,39 @@ if (import.meta.env.MODE !== 'development') {
   window.onbeforeunload = () => false
 }
 
+const loadStartupProject = async () => {
+  const path = import.meta.env.VITE_PPTIST_STARTUP_PROJECT
+  if (!path) return false
+
+  try {
+    const url = new URL(path, window.location.href)
+    if (url.origin !== window.location.origin) throw new Error('Expected a local project')
+    const response = await fetch(url)
+    if (!response.ok) throw new Error('Project could not be opened')
+
+    const { slides, theme, title, width, height } = JSON.parse(decrypt(await response.text())) as {
+      slides: Slide[]
+      theme?: Partial<SlideTheme>
+      title?: string
+      width?: number
+      height?: number
+    }
+    if (!Array.isArray(slides) || !slides.length) throw new Error('Project has no slides')
+
+    slidesStore.setSlides(slides, theme)
+    if (title) slidesStore.setTitle(title)
+    if (width && height) {
+      slidesStore.setViewportSize(width)
+      slidesStore.setViewportRatio(height / width)
+    }
+    return true
+  }
+  catch {
+    message.error('无法打开启动演示文稿')
+    return false
+  }
+}
+
 onMounted(async () => {
   if (isAudienceMode) {
     slidesStore.setSlides([{
@@ -47,8 +83,10 @@ onMounted(async () => {
     screenStore.setScreening(true)
   }
   else {
-    const slides = await api.getMockData('slides')
-    slidesStore.setSlides(slides)
+    if (!await loadStartupProject()) {
+      const slides = await api.getMockData('slides')
+      slidesStore.setSlides(slides)
+    }
 
     await deleteDiscardedDB()
     snapshotStore.initSnapshotDatabase()

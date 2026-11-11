@@ -6,6 +6,7 @@
     <LaTeXEditor
       v-if="editingLatexElement"
       :value="editingLatexElement.latex"
+      :katexOptions="editingLatexElement.katex"
       @close="visible = false"
       @update="data => updateLatexData(data)"
     />
@@ -55,13 +56,16 @@ const openLatexEditor = () => {
 const updateLatexData = (data: { path: string; latex: string; w: number; h: number }) => {
   if (!editingLatexElement.value) return
 
+  const element = editingLatexElement.value
+  const scaleX = element.katex ? element.width / element.viewBox[0] : 1
+  const scaleY = element.katex ? element.height / element.viewBox[1] : 1
   slidesStore.updateElement({
-    id: editingLatexElement.value.id,
+    id: element.id,
     props: {
       path: data.path,
       latex: data.latex,
-      width: data.w,
-      height: data.h,
+      width: data.w * scaleX,
+      height: data.h * scaleY,
       viewBox: [data.w, data.h],
     },
   })

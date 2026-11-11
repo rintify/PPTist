@@ -8,7 +8,15 @@
         <div class="preview">
           <div class="placeholder" v-if="!latex">公式预览</div>
           <div class="preview-content" v-else>
+            <KaTeXContent
+              v-if="katexOptions"
+              ref="katexPreview"
+              :latex="latex"
+              :display="katexOptions.display"
+              :style="{ fontSize: katexOptions.fontSize + 'px', fontFamily: katexOptions.fontFamily }"
+            />
             <FormulaContent
+              v-else
               :width="518"
               :height="138"
               :latex="latex"
@@ -72,6 +80,9 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { hfmath } from './hfmath'
+import katex from 'katex'
+import type { PPTLatexElement } from '@/types/slides'
+import KaTeXContent from './KaTeXContent.vue'
 import { FORMULA_LIST, SYMBOL_LIST, type FormulaPreset } from '@/configs/latex'
 import message from '@/utils/message'
 
@@ -100,6 +111,7 @@ interface LatexResult {
 
 const props = withDefaults(defineProps<{
   value?: string
+  katexOptions?: PPTLatexElement['katex']
 }>(), {
   value: '',
 })
@@ -120,6 +132,7 @@ const symbolTabs = SYMBOL_LIST.map(item => ({
 }))
 
 const latex = ref('')
+const katexPreview = useTemplateRef<InstanceType<typeof KaTeXContent>>('katexPreview')
 const toolbarState = ref<'symbol' | 'formula'>('symbol')
 const textAreaRef = useTemplateRef<InstanceType<typeof TextArea>>('textAreaRef')
 
@@ -152,8 +165,22 @@ onMounted(() => {
   }, 0)
 })
 
-const update = () => {
+const update = async () => {
   if (!latex.value) return message.error('公式不能为空')
+
+  if (props.katexOptions) {
+    try {
+      katex.renderToString(latex.value, { displayMode: props.katexOptions.display })
+    }
+    catch {
+      return message.error('LaTeX 公式无效')
+    }
+    await document.fonts.ready
+    const box = (katexPreview.value?.$el as HTMLElement | undefined)?.getBoundingClientRect()
+    if (!box) return
+    emit('update', { latex: latex.value, path: '', w: box.width, h: box.height })
+    return
+  }
 
   const eq = new hfmath(latex.value)
   const pathd = eq.pathd({})
@@ -225,6 +252,12 @@ const insertSymbol = (latex: string) => {
   display: flex;
   justify-content: center;
   align-items: center;
+
+  &:has(.katex-content) {
+    overflow: auto;
+    justify-content: safe center;
+    align-items: safe center;
+  }
 }
 .right {
   width: 280px;

@@ -53,6 +53,12 @@ npm run dev
 ```
 Browser access: http://127.0.0.1:5173/
 
+## Startup presentation
+
+To open a local `.pptist` file at startup, place it in a local-only directory under `public/` and set `VITE_PPTIST_STARTUP_PROJECT` in `.env.local` to its relative URL, such as `./local-projects/deck.pptist`. Keep that directory out of Git for personal presentations. Save edits through the PPTIST export menu and replace the startup file with the export when you want the next session to open the updated deck.
+
+Presentation files with KaTeX formula elements use this fork for formula rendering and editing.
+
 
 # 📚 Features
 ### Basic Features

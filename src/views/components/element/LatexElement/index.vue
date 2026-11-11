@@ -20,22 +20,7 @@
         @touchstart="$event => handleSelectElement($event)"
         @dblclick="openLatexEditor()"
       >
-        <svg 
-          overflow="visible" 
-          :width="elementInfo.width"
-          :height="elementInfo.height"
-          :stroke="elementInfo.color" 
-          :stroke-width="elementInfo.strokeWidth" 
-          fill="none" 
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <g 
-            :transform="`scale(${elementInfo.width / elementInfo.viewBox[0]}, ${elementInfo.height / elementInfo.viewBox[1]}) translate(0,0) matrix(1,0,0,1,0,0)`"
-          >
-            <path :d="elementInfo.path"></path>
-          </g>
-        </svg>
+        <LatexGraphic :element="elementInfo" />
       </div>
     </div>
   </div>
@@ -43,6 +28,7 @@
 
 <script lang="ts" setup>
 import type { PPTLatexElement } from '@/types/slides'
+import LatexGraphic from './LatexGraphic.vue'
 import type { ContextmenuItem } from '@/components/Contextmenu/types'
 import emitter, { EmitterEvents } from '@/utils/emitter'
 
@@ -81,10 +67,5 @@ const openLatexEditor = () => {
   height: 100%;
   position: relative;
   cursor: move;
-
-  svg {
-    transform-origin: 0 0;
-    overflow: visible;
-  }
 }
 </style>

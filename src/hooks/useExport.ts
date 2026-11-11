@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 import { saveAs } from 'file-saver'
 import pptxgen from 'pptxgenjs'
 import tinycolor from 'tinycolor2'
-import { toPng, toJpeg } from 'html-to-image'
+import { getFontEmbedCSS, toPng, toJpeg } from 'html-to-image'
 import { useSlidesStore } from '@/store'
 import type { PPTElementOutline, PPTElementShadow, PPTElementLink, Slide } from '@/types/slides'
 import { getElementRange, getLineElementPath, getTableSubThemeColor } from '@/utils/element'
@@ -482,10 +482,11 @@ export default () => {
   }
 
   // 导出PPTX文件
-  const exportPPTX = (_slides: Slide[], masterOverwrite: boolean, ignoreMedia: boolean) => {
+  const exportPPTX = async (_slides: Slide[], masterOverwrite: boolean, ignoreMedia: boolean) => {
     exporting.value = true
     const pptx = new pptxgen()
     setPPTXLayout(pptx)
+    let formulaFontCSS: string | undefined
 
     if (masterOverwrite) {
       const { color: bgColor, alpha: bgAlpha } = formatColor(theme.value.backgroundColor)
@@ -953,16 +954,37 @@ export default () => {
         
         else if (el.type === 'latex') {
           const container = document.createElement('div')
-          const vm = createVNode(BaseLatexElement, { elementInfo: el }, null)
+          const vm = createVNode(BaseLatexElement, { elementInfo: { ...el, top: 0, left: 0 } })
           render(vm, container)
-          const svgRef = container.querySelector('svg')
-          const base64SVG = svgRef ? svg2Base64(svgRef) : ''
-          render(null, container)
+          let data = ''
+          try {
+            if (el.katex) {
+              const formula = container.firstElementChild as HTMLElement
+              container.style.cssText = 'position:absolute;left:-100000px;top:0'
+              document.body.append(container)
+              await document.fonts.ready
+              formulaFontCSS ??= await getFontEmbedCSS(formula, { preferredFontFormat: 'woff2' })
+              data = await toPng(formula, { fontEmbedCSS: formulaFontCSS, pixelRatio: 2 })
+            }
+            else {
+              const svg = container.querySelector('svg')
+              if (svg) data = svg2Base64(svg)
+            }
+          }
+          catch {
+            exporting.value = false
+            message.error('导出失败')
+            return
+          }
+          finally {
+            render(null, container)
+            container.remove()
+          }
 
-          if (!base64SVG) continue
+          if (!data) continue
 
           const options: pptxgen.ImageProps = {
-            data: base64SVG,
+            data,
             x: el.left / ratioPx2Inch.value,
             y: el.top / ratioPx2Inch.value,
             w: el.width / ratioPx2Inch.value,

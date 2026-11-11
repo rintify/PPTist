@@ -640,6 +640,7 @@ export interface PPTTableElement extends PPTBaseElement {
  */
 export interface PPTLatexElement extends PPTBaseElement {
   type: 'latex'
+  katex?: { fontSize: number; display: boolean; fontFamily?: string }
   latex: string
   path: string
   color: string
