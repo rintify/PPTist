@@ -165,6 +165,13 @@ export default () => {
 
   type FormatColor = ReturnType<typeof formatColor>
 
+  // PowerPoint expects one font family. PptxGenJS writes the name directly into XML.
+  const formatFontFace = (families: string) => {
+    const firstFamily = families.match(/^\s*(?:"([^"]+)"|'([^']+)'|([^,]+))/)
+    const name = (firstFamily?.[1] || firstFamily?.[2] || firstFamily?.[3] || '').trim()
+    return name.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  }
+
   // 将HTML字符串格式化为pptxgenjs所需的格式
   // 核心思路：将HTML字符串按样式分片平铺，每个片段需要继承祖先元素的样式信息，遇到块级元素需要换行
   const formatHTML = (html: string) => {
@@ -188,7 +195,10 @@ export default () => {
         const styleAttr = 'attributes' in item ? item.attributes.find(attr => attr.key === 'style') : null
         if (styleAttr && styleAttr.value) {
           let hasGradient = false
-          const styleArr = styleAttr.value.split(';')
+          const styleArr = styleAttr.value
+            .replace(/&quot;|&#34;/g, '"')
+            .replace(/&apos;|&#39;|&#x27;/gi, "'")
+            .split(';')
           for (const styleItem of styleArr) {
             const match = styleItem.match(/([^:]+):\s*(.+)/)
             if (match) {
@@ -298,7 +308,7 @@ export default () => {
           if (styleObj['text-align']) options.align = styleObj['text-align'] as pptxgen.HAlign
           if (styleObj['font-weight']) options.bold = styleObj['font-weight'] === 'bold'
           if (styleObj['font-style']) options.italic = styleObj['font-style'] === 'italic'
-          if (styleObj['font-family']) options.fontFace = styleObj['font-family']
+          if (styleObj['font-family']) options.fontFace = formatFontFace(styleObj['font-family'])
           if (styleObj['href']) options.hyperlink = { url: styleObj['href'] }
 
           if (bulletFlag && styleObj['list-type'] === 'ol') {
@@ -457,11 +467,11 @@ export default () => {
   }
 
   // 获取超链接配置
-  const getLinkOption = (link: PPTElementLink): pptxgen.HyperlinkProps | null => {
+  const getLinkOption = (link: PPTElementLink, exportedSlides: Slide[]): pptxgen.HyperlinkProps | null => {
     const { type, target } = link
     if (type === 'web') return { url: target }
     if (type === 'slide') {
-      const index = slides.value.findIndex(slide => slide.id === target)
+      const index = exportedSlides.findIndex(slide => slide.id === target)
       if (index !== -1) return { slide: index + 1 }
     }
 
@@ -548,6 +558,13 @@ export default () => {
       for (const el of [...slide.elements, ...(structureElements[slide.id] || [])]) {
         if (el.type === 'text') {
           const textProps = formatHTML(el.content)
+          const link = el.link && getLinkOption(el.link, _slides)
+          if (link) {
+            for (const run of textProps) {
+              run.options ??= {}
+              run.options.hyperlink ??= { ...link }
+            }
+          }
           const inset = el.inset || [10, 10, 10, 10]
 
           const options: pptxgen.TextPropsOptions = {
@@ -572,7 +589,7 @@ export default () => {
             options.fill = { color: c.color, transparency: (1 - c.alpha * opacity) * 100 }
           }
           if (el.defaultColor) options.color = formatColor(el.defaultColor).color
-          if (el.defaultFontName) options.fontFace = el.defaultFontName
+          if (el.defaultFontName) options.fontFace = formatFontFace(el.defaultFontName)
           if (el.shadow) options.shadow = getShadowOption(el.shadow)
           if (el.outline?.width) options.line = getOutlineOption(el.outline)
           if (el.opacity !== undefined) options.transparency = (1 - el.opacity) * 100
@@ -597,7 +614,7 @@ export default () => {
           if (el.flipV) options.flipV = el.flipV
           if (el.rotate) options.rotate = el.rotate
           if (el.link) {
-            const linkOption = getLinkOption(el.link)
+            const linkOption = getLinkOption(el.link, _slides)
             if (linkOption) options.hyperlink = linkOption
           }
           if (el.filters?.opacity) options.transparency = 100 - parseInt(el.filters?.opacity)
@@ -648,7 +665,7 @@ export default () => {
             if (el.flipH) options.flipH = el.flipH
             if (el.flipV) options.flipV = el.flipV
             if (el.link) {
-              const linkOption = getLinkOption(el.link)
+              const linkOption = getLinkOption(el.link, _slides)
               if (linkOption) options.hyperlink = linkOption
             }
 
@@ -686,7 +703,7 @@ export default () => {
             if (el.outline?.width) options.line = getOutlineOption(el.outline)
             if (el.rotate) options.rotate = el.rotate
             if (el.link) {
-              const linkOption = getLinkOption(el.link)
+              const linkOption = getLinkOption(el.link, _slides)
               if (linkOption) options.hyperlink = linkOption
             }
 
@@ -710,7 +727,7 @@ export default () => {
             }
             if (el.rotate) options.rotate = el.rotate
             if (el.text.defaultColor) options.color = formatColor(el.text.defaultColor).color
-            if (el.text.defaultFontName) options.fontFace = el.text.defaultFontName
+            if (el.text.defaultFontName) options.fontFace = formatFontFace(el.text.defaultFontName)
 
             pptxSlide.addText(textProps, options)
           }
@@ -728,7 +745,7 @@ export default () => {
             if (el.flipV) options.flipV = el.flipV
             if (el.rotate) options.rotate = el.rotate
             if (el.link) {
-              const linkOption = getLinkOption(el.link)
+              const linkOption = getLinkOption(el.link, _slides)
               if (linkOption) options.hyperlink = linkOption
             }
 
@@ -894,7 +911,7 @@ export default () => {
                 underline: { style: 'none' },
                 align: cell.style?.align || 'left',
                 valign: cell.style?.vAlign || 'top',
-                fontFace: cell.style?.fontname || 'Microsoft YaHei',
+                fontFace: formatFontFace(cell.style?.fontname || 'Microsoft YaHei'),
                 fontSize: (cell.style?.fontsize ? parseInt(cell.style?.fontsize) : 14) / ratioPx2Pt.value,
               }
               let fillColor: FormatColor | null = null
@@ -992,7 +1009,7 @@ export default () => {
             h: el.height / ratioPx2Inch.value,
           }
           if (el.link) {
-            const linkOption = getLinkOption(el.link)
+            const linkOption = getLinkOption(el.link, _slides)
             if (linkOption) options.hyperlink = linkOption
           }
 
