@@ -6,7 +6,7 @@
       </template>
       <button class="toolbar-btn">
         <i-icon-park-outline:fill class="icon" />
-        <span>填充</span>
+        <span>塗りつぶし</span>
       </button>
     </Popover>
     <BorderPanel />
@@ -16,27 +16,27 @@
     <Popover trigger="click">
       <template #content>
         <div class="table-command-menu">
-          <PopoverMenuItem center @click="emitTableCommand('insert-row', 'before')">上方插入行</PopoverMenuItem>
-          <PopoverMenuItem center @click="emitTableCommand('insert-row', 'after')">下方插入行</PopoverMenuItem>
-          <PopoverMenuItem center @click="emitTableCommand('insert-col', 'before')">左侧插入列</PopoverMenuItem>
-          <PopoverMenuItem center @click="emitTableCommand('insert-col', 'after')">右侧插入列</PopoverMenuItem>
+          <PopoverMenuItem center @click="emitTableCommand('insert-row', 'before')">上に行を挿入</PopoverMenuItem>
+          <PopoverMenuItem center @click="emitTableCommand('insert-row', 'after')">下に行を挿入</PopoverMenuItem>
+          <PopoverMenuItem center @click="emitTableCommand('insert-col', 'before')">左に列を挿入</PopoverMenuItem>
+          <PopoverMenuItem center @click="emitTableCommand('insert-col', 'after')">右に列を挿入</PopoverMenuItem>
         </div>
       </template>
       <button class="toolbar-btn">
         <i-icon-park-outline:add class="icon" />
-        <span>添加</span>
+        <span>追加</span>
       </button>
     </Popover>
     <Popover trigger="click">
       <template #content>
         <div class="table-command-menu">
-          <PopoverMenuItem center @click="emitTableCommand('delete-row')">删除行</PopoverMenuItem>
-          <PopoverMenuItem center @click="emitTableCommand('delete-col')">删除列</PopoverMenuItem>
+          <PopoverMenuItem center @click="emitTableCommand('delete-row')">行を削除</PopoverMenuItem>
+          <PopoverMenuItem center @click="emitTableCommand('delete-col')">列を削除</PopoverMenuItem>
         </div>
       </template>
       <button class="toolbar-btn">
         <i-icon-park-outline:reduce class="icon" />
-        <span>删除</span>
+        <span>削除</span>
       </button>
     </Popover>
     <template v-if="showTextStyleControls">

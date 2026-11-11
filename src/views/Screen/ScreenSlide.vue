@@ -9,7 +9,7 @@
   >
     <div class="background" :style="{ ...backgroundStyle }"></div>
     <ScreenElement
-      v-for="(element, index) in slide.elements"
+      v-for="(element, index) in renderedElements"
       :key="element.id"
       :elementInfo="element"
       :elementIndex="index + 1"
@@ -38,7 +38,11 @@ const props = defineProps<{
   manualExitFullscreen: () => void
 }>()
 
-const { viewportRatio, viewportSize } = storeToRefs(useSlidesStore())
+const { viewportRatio, viewportSize, slideStructure } = storeToRefs(useSlidesStore())
+const renderedElements = computed(() => {
+  const structure = slideStructure.value.elementsBySlideId[props.slide.id]
+  return structure ? [...props.slide.elements, ...structure] : props.slide.elements
+})
 
 const background = computed(() => props.slide.background)
 const { backgroundStyle } = useSlideBackgroundStyle(background)

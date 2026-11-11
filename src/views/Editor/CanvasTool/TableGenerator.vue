@@ -1,8 +1,8 @@
 <template>
   <div class="table-generator">
     <div class="title">
-      <div class="lef">表格 {{endCell.length ? `${endCell[0]} x ${endCell[1]}` : ''}}</div>
-      <div class="right" @click="isCustom = !isCustom">{{ isCustom ? '返回' : '自定义'}}</div>
+      <div class="lef">表 {{endCell.length ? `${endCell[0]} x ${endCell[1]}` : ''}}</div>
+      <div class="right" @click="isCustom = !isCustom">{{ isCustom ? '戻る' : 'カスタム'}}</div>
     </div>
     <table 
       @mouseleave="endCell = []" 
@@ -44,8 +44,8 @@
         />
       </div>
       <div class="btns">
-        <Button class="btn" @click="close()">取消</Button>
-        <Button class="btn" type="primary" @click="insertCustomTable()">确认</Button>
+        <Button class="btn" @click="close()">キャンセル</Button>
+        <Button class="btn" type="primary" @click="insertCustomTable()">確認</Button>
       </div>
     </div>
   </div>
@@ -79,8 +79,8 @@ const handleClickTable = () => {
 }
 
 const insertCustomTable = () => {
-  if (customRow.value < 1 || customRow.value > 20) return message.warning('行数/列数必须在0~20之间！')
-  if (customCol.value < 1 || customCol.value > 20) return message.warning('行数/列数必须在0~20之间！')
+  if (customRow.value < 1 || customRow.value > 20) return message.warning('行数と列数は 0〜20 で指定してください')
+  if (customCol.value < 1 || customCol.value > 20) return message.warning('行数と列数は 0〜20 で指定してください')
   emit('insert', { row: customRow.value, col: customCol.value })
   isCustom.value = false
 }

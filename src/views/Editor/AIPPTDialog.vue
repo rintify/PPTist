@@ -2,9 +2,9 @@
   <div class="aippt-dialog">
     <div class="header">
       <span class="title">AIPPT</span>
-      <span class="subtite" v-if="step === 'template'">从下方挑选合适的模板生成PPT，或<span class="local" v-tooltip="'上传.pptist格式模板文件'" @click="uploadLocalTemplate()">使用本地模板生成</span></span>
-      <span class="subtite" v-else-if="step === 'outline'">确认下方内容大纲（点击编辑内容，右键添加/删除大纲项），开始选择模板</span>
-      <span class="subtite" v-else>在下方输入您的PPT主题，并适当补充信息，如行业、岗位、学科、用途等</span>
+      <span class="subtite" v-if="step === 'template'">下からテンプレートを選ぶか、<span class="local" v-tooltip="'.pptist テンプレートを読み込む'" @click="uploadLocalTemplate()">ローカルのテンプレート</span>を使って作成できます</span>
+      <span class="subtite" v-else-if="step === 'outline'">構成案を確認してテンプレートを選択してください。クリックで編集、右クリックで項目を追加・削除できます</span>
+      <span class="subtite" v-else>テーマを入力してください。業界、職種、分野、用途なども指定できます</span>
     </div>
     
     <template v-if="step === 'setup'">
@@ -12,7 +12,7 @@
         ref="inputRef"
         v-model:value="keyword" 
         :maxlength="50" 
-        placeholder="请输入PPT主题，如：大学生职业生涯规划" 
+        placeholder="テーマを入力（例：大学生のキャリア設計）"
         @enter="createOutline()"
       >
         <template #suffix>
@@ -25,35 +25,35 @@
       </div>
       <div class="configs">
         <div class="config-item">
-          <div class="label">语言：</div>
+          <div class="label">言語：</div>
           <Select 
             class="config-content"
             style="width: 80px;"
             v-model:value="language"
             :options="[
-              { label: '中文', value: '中文' },
-              { label: '英文', value: 'English' },
-              { label: '日文', value: '日本語' },
+              { label: '中国語', value: '中文' },
+              { label: '英語', value: 'English' },
+              { label: '日本語', value: '日本語' },
             ]"
           />
         </div>
         <div class="config-item">
-          <div class="label">风格：</div>
+          <div class="label">スタイル：</div>
           <Select 
             class="config-content"
             style="width: 80px;"
             v-model:value="style"
             :options="[
-              { label: '通用', value: '通用' },
-              { label: '学术风', value: '学术风' },
-              { label: '职场风', value: '职场风' },
-              { label: '教育风', value: '教育风' },
-              { label: '营销风', value: '营销风' },
+              { label: '一般', value: '通用' },
+              { label: '学術', value: '学术风' },
+              { label: 'ビジネス', value: '职场风' },
+              { label: '教育', value: '教育风' },
+              { label: 'マーケティング', value: '营销风' },
             ]"
           />
         </div>
         <div class="config-item">
-          <div class="label">模型：</div>
+          <div class="label">モデル：</div>
           <Select 
             class="config-content"
             style="width: 190px;"
@@ -67,23 +67,23 @@
           />
         </div>
         <div class="config-item">
-          <div class="label">配图：</div>
+          <div class="label">挿入画像：</div>
           <Select 
             class="config-content"
             style="width: 100px;"
             v-model:value="img"
             :options="[
-              { label: '无', value: '' },
-              { label: '模拟测试', value: 'test' },
-              { label: 'AI搜图', value: 'ai-search', disabled: true },
-              { label: 'AI生图', value: 'ai-create', disabled: true },
+              { label: 'なし', value: '' },
+              { label: '模擬テスト', value: 'test' },
+              { label: 'AI で画像を検索', value: 'ai-search', disabled: true },
+              { label: 'AI で画像を生成', value: 'ai-create', disabled: true },
             ]"
           />
         </div>
       </div>
       <div class="configs" v-if="!isEmptySlide">
         <div class="config-item">
-          <Checkbox v-model:value="overwrite">覆盖已有幻灯片</Checkbox>
+          <Checkbox v-model:value="overwrite">既存のスライドを置き換える</Checkbox>
         </div>
       </div>
     </template>
@@ -93,8 +93,8 @@
          <OutlineEditor v-model:value="outline" />
        </div>
       <div class="btns" v-if="!outlineCreating">
-        <Button class="btn" type="primary" @click="step = 'template'">选择模板</Button>
-        <Button class="btn" @click="outline = ''; step = 'setup'">返回重新生成</Button>
+        <Button class="btn" type="primary" @click="step = 'template'">テンプレートを選択</Button>
+        <Button class="btn" @click="outline = ''; step = 'setup'">戻って再生成</Button>
       </div>
     </div>
     <div class="select-template" v-if="step === 'template'">
@@ -110,11 +110,11 @@
       </div>
       <div class="btns">
         <Button class="btn" type="primary" @click="createPPT()">生成</Button>
-        <Button class="btn" @click="step = 'outline'">返回大纲</Button>
+        <Button class="btn" @click="step = 'outline'">構成案に戻る</Button>
       </div>
     </div>
 
-    <FullscreenSpin :loading="loading" tip="AI生成中，请耐心等待 ..." />
+    <FullscreenSpin :loading="loading" tip="AI で生成しています…" />
   </div>
 </template>
 
@@ -144,7 +144,7 @@ const { templates } = storeToRefs(slidesStore)
 const { resetSlides, isEmptySlide } = useSlideHandler()
 const { AIPPT, presetImgPool, getMdContent } = useAIPPT()
 
-const language = ref('中文')
+const language = ref('日本語')
 const style = ref('通用')
 const img = ref('')
 const keyword = ref('')
@@ -159,16 +159,16 @@ const outlineRef = useTemplateRef<HTMLElement>('outlineRef')
 const inputRef = useTemplateRef<InstanceType<typeof Input>>('inputRef')
 
 const recommends = ref([
-  '2025科技前沿动态',
-  '大数据如何改变世界',
-  '餐饮市场调查与研究',
-  'AIGC在教育领域的应用',
-  '社交媒体与品牌营销',
-  '5G技术如何改变我们的生活',
-  '年度工作总结与展望',
-  '区块链技术及其应用',
-  '大学生职业生涯规划',
-  '公司年会策划方案',
+  '2025年の先端技術動向',
+  'ビッグデータは世界をどう変えるか',
+  '外食市場の調査',
+  '教育分野における生成AIの活用',
+  'SNSとブランドマーケティング',
+  '5Gで暮らしはどう変わるか',
+  '年度の振り返りと今後の展望',
+  'ブロックチェーン技術とその応用',
+  '大学生のキャリア設計',
+  '社内年次イベントの企画',
 ]) 
 
 onMounted(() => {
@@ -183,7 +183,7 @@ const setKeyword = (value: string) => {
 }
 
 const createOutline = async () => {
-  if (!keyword.value) return message.error('请先输入PPT主题')
+  if (!keyword.value) return message.error('プレゼンテーションのテーマを入力してください')
 
   loading.value = true
   outlineCreating.value = true
@@ -198,7 +198,7 @@ const createOutline = async () => {
   })
   if (typeof stream === 'object' && stream.state === -1) {
     loading.value = false
-    return message.error('该模型API的并发数过高，请更换其他模型重试')
+    return message.error('リクエストが集中しています。別のモデルで試してください')
   }
 
   loading.value = false
@@ -232,7 +232,7 @@ const createOutline = async () => {
 const createPPT = async (template?: { slides: Slide[], theme: SlideTheme }) => {
   loading.value = true
   mainStore.setAIPPTDialogState('running')
-  message.loading('演示文稿生成中，请稍等 ...', { duration: 0 })
+  message.loading('プレゼンテーションを生成しています…', { duration: 0 })
 
   if (overwrite.value) resetSlides()
 
@@ -249,7 +249,7 @@ const createPPT = async (template?: { slides: Slide[], theme: SlideTheme }) => {
     loading.value = false
     message.closeAll()
     mainStore.setAIPPTDialogState(true)
-    return message.error('该模型不可用，请更换其他模型重试')
+    return message.error('このモデルは利用できません。別のモデルを選んでください')
   }
 
   if (img.value === 'test') {
@@ -317,7 +317,7 @@ const uploadLocalTemplate = () => {
           createPPT({ slides, theme })
         }
         catch {
-          message.error('上传的模板文件数据异常，请重新上传或使用预置模板')
+          message.error('テンプレートを読み込めませんでした。もう一度読み込むか、内蔵テンプレートを選んでください')
         }
       })
       reader.readAsText(file)

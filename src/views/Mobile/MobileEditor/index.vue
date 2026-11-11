@@ -31,6 +31,13 @@
             :elementIndex="index + 1"
             :selectElement="selectElement"
           />
+          <ThumbnailElement
+            v-for="(element, index) in slideStructure.elementsBySlideId[currentSlide.id]"
+            :key="element.id"
+            :elementInfo="element"
+            :elementIndex="elementList.length + index + 1"
+            class="slide-structure-element"
+          />
         </div>
       </div>
     </div>
@@ -41,6 +48,7 @@
 </template>
 
 <script lang="ts" setup>
+import ThumbnailElement from '@/views/components/ThumbnailSlide/ThumbnailElement.vue'
 import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import useCanvasElementList from '@/hooks/useCanvasElementList'
 import { storeToRefs } from 'pinia'
@@ -66,7 +74,7 @@ defineProps<{
 
 const slidesStore = useSlidesStore()
 const mainStore = useMainStore()
-const { slideIndex, currentSlide, viewportRatio, viewportSize } = storeToRefs(slidesStore)
+const { slideIndex, currentSlide, viewportRatio, viewportSize, slideStructure } = storeToRefs(slidesStore)
 const { activeElementIdList, handleElement } = storeToRefs(mainStore)
 
 const contentRef = useTemplateRef<HTMLElement>('contentRef')
@@ -117,6 +125,10 @@ const handleClickBlankArea = () => {
 </script>
 
 <style lang="scss" scoped>
+.slide-structure-element {
+  pointer-events: none;
+}
+
 .mobile-editor {
   height: 100%;
   position: relative;

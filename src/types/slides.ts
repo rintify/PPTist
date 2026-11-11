@@ -798,7 +798,16 @@ export type SlideType = 'cover' | 'contents' | 'transition' | 'content' | 'end'
  * 
  * slideType?: 页面类型
  */
+export interface SlideStructure {
+  kind: 'none' | 'standard' | 'contents'
+  title?: string
+  subtitle?: string
+  references?: { text: string; url?: string }[]
+  additionalSections?: string[]
+}
+
 export interface Slide {
+  structure?: SlideStructure
   id: string
   elements: PPTElement[]
   notes?: Note[]

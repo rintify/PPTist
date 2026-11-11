@@ -16,13 +16,13 @@
     >
       <div class="background" :style="backgroundStyle"></div>
       <ThumbnailElement
-        v-for="(element, index) in slide.elements"
+        v-for="(element, index) in renderedElements"
         :key="element.id"
         :elementInfo="element"
         :elementIndex="index + 1"
       />
     </div>
-    <div class="placeholder" v-else>加载中 ...</div>
+    <div class="placeholder" v-else>読み込み中 ...</div>
   </div>
 </template>
 
@@ -44,7 +44,11 @@ const props = withDefaults(defineProps<{
   visible: true,
 })
 
-const { viewportRatio, viewportSize } = storeToRefs(useSlidesStore())
+const { viewportRatio, viewportSize, slideStructure } = storeToRefs(useSlidesStore())
+const renderedElements = computed(() => {
+  const structure = slideStructure.value.elementsBySlideId[props.slide.id]
+  return structure ? [...props.slide.elements, ...structure] : props.slide.elements
+})
 
 const background = computed(() => props.slide.background)
 const { backgroundStyle } = useSlideBackgroundStyle(background)

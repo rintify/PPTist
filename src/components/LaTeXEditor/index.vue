@@ -3,10 +3,10 @@
     <div class="container">
       <div class="left">
         <div class="input-area">
-          <TextArea v-model:value="latex" placeholder="输入 LaTeX 公式" ref="textAreaRef" />
+          <TextArea v-model:value="latex" placeholder="LaTeX の数式を入力" ref="textAreaRef" />
         </div>
         <div class="preview">
-          <div class="placeholder" v-if="!latex">公式预览</div>
+          <div class="placeholder" v-if="!latex">数式プレビュー</div>
           <div class="preview-content" v-else>
             <KaTeXContent
               v-if="katexOptions"
@@ -71,8 +71,8 @@
       </div>
     </div>
     <div class="footer">
-      <Button class="btn" @click="emit('close')">取消</Button>
-      <Button class="btn" type="primary" @click="update()">确定</Button>
+      <Button class="btn" @click="emit('close')">キャンセル</Button>
+      <Button class="btn" type="primary" @click="update()">OK</Button>
     </div>
   </div>
 </template>
@@ -98,8 +98,8 @@ interface TabItem {
 }
 
 const tabs: TabItem[] = [
-  { label: '常用符号', key: 'symbol' },
-  { label: '预置公式', key: 'formula' },
+  { label: 'よく使う記号', key: 'symbol' },
+  { label: '数式テンプレート', key: 'formula' },
 ]
 
 interface LatexResult {
@@ -166,14 +166,14 @@ onMounted(() => {
 })
 
 const update = async () => {
-  if (!latex.value) return message.error('公式不能为空')
+  if (!latex.value) return message.error('数式を入力してください')
 
   if (props.katexOptions) {
     try {
       katex.renderToString(latex.value, { displayMode: props.katexOptions.display })
     }
     catch {
-      return message.error('LaTeX 公式无效')
+      return message.error('LaTeX の記述を確認してください')
     }
     await document.fonts.ready
     const box = (katexPreview.value?.$el as HTMLElement | undefined)?.getBoundingClientRect()

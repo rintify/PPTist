@@ -75,90 +75,90 @@ const { selectAllElements } = useSelectElement()
 const contextmenus = (): ContextmenuItem[] => {
   if (props.elementInfo.lock) {
     return [{
-      text: '解锁', 
+      text: 'ロック解除',
       handler: () => unlockElement(props.elementInfo),
     }]
   }
 
   return [
     {
-      text: '剪切',
+      text: '切り取り',
       subText: 'Ctrl + X',
       handler: cutElement,
     },
     {
-      text: '复制',
+      text: 'コピー',
       subText: 'Ctrl + C',
       handler: copyElement,
     },
     {
-      text: '粘贴',
+      text: '貼り付け',
       subText: 'Ctrl + V',
       handler: pasteElement,
     },
     { divider: true },
     {
-      text: '水平居中',
+      text: '左右中央揃え',
       handler: () => alignElementToCanvas(ElementAlignCommands.HORIZONTAL),
       children: [
-        { text: '水平垂直居中', handler: () => alignElementToCanvas(ElementAlignCommands.CENTER), },
-        { text: '水平居中', handler: () => alignElementToCanvas(ElementAlignCommands.HORIZONTAL) },
-        { text: '左对齐', handler: () => alignElementToCanvas(ElementAlignCommands.LEFT) },
-        { text: '右对齐', handler: () => alignElementToCanvas(ElementAlignCommands.RIGHT) },
+        { text: '上下左右中央揃え', handler: () => alignElementToCanvas(ElementAlignCommands.CENTER), },
+        { text: '左右中央揃え', handler: () => alignElementToCanvas(ElementAlignCommands.HORIZONTAL) },
+        { text: '左揃え', handler: () => alignElementToCanvas(ElementAlignCommands.LEFT) },
+        { text: '右揃え', handler: () => alignElementToCanvas(ElementAlignCommands.RIGHT) },
       ],
     },
     {
-      text: '垂直居中',
+      text: '上下中央揃え',
       handler: () => alignElementToCanvas(ElementAlignCommands.VERTICAL),
       children: [
-        { text: '水平垂直居中', handler: () => alignElementToCanvas(ElementAlignCommands.CENTER) },
-        { text: '垂直居中', handler: () => alignElementToCanvas(ElementAlignCommands.VERTICAL) },
-        { text: '顶部对齐', handler: () => alignElementToCanvas(ElementAlignCommands.TOP) },
-        { text: '底部对齐', handler: () => alignElementToCanvas(ElementAlignCommands.BOTTOM) },
+        { text: '上下左右中央揃え', handler: () => alignElementToCanvas(ElementAlignCommands.CENTER) },
+        { text: '上下中央揃え', handler: () => alignElementToCanvas(ElementAlignCommands.VERTICAL) },
+        { text: '上揃え', handler: () => alignElementToCanvas(ElementAlignCommands.TOP) },
+        { text: '下揃え', handler: () => alignElementToCanvas(ElementAlignCommands.BOTTOM) },
       ],
     },
     { divider: true },
     {
-      text: '置于顶层',
+      text: '最前面へ移動',
       disable: props.isMultiSelect && !props.elementInfo.groupId,
       handler: () => orderElement(props.elementInfo, ElementOrderCommands.TOP),
       children: [
-        { text: '置于顶层', handler: () => orderElement(props.elementInfo, ElementOrderCommands.TOP) },
-        { text: '上移一层', handler: () => orderElement(props.elementInfo, ElementOrderCommands.UP) },
+        { text: '最前面へ移動', handler: () => orderElement(props.elementInfo, ElementOrderCommands.TOP) },
+        { text: '前面へ移動', handler: () => orderElement(props.elementInfo, ElementOrderCommands.UP) },
       ],
     },
     {
-      text: '置于底层',
+      text: '最背面へ移動',
       disable: props.isMultiSelect && !props.elementInfo.groupId,
       handler: () => orderElement(props.elementInfo, ElementOrderCommands.BOTTOM),
       children: [
-        { text: '置于底层', handler: () => orderElement(props.elementInfo, ElementOrderCommands.BOTTOM) },
-        { text: '下移一层', handler: () => orderElement(props.elementInfo, ElementOrderCommands.DOWN) },
+        { text: '最背面へ移動', handler: () => orderElement(props.elementInfo, ElementOrderCommands.BOTTOM) },
+        { text: '背面へ移動', handler: () => orderElement(props.elementInfo, ElementOrderCommands.DOWN) },
       ],
     },
     { divider: true },
     {
-      text: '设置链接',
+      text: 'リンクを設定',
       handler: props.openLinkDialog,
     },
     {
-      text: props.elementInfo.groupId ? '取消组合' : '组合',
+      text: props.elementInfo.groupId ? 'グループ解除' : 'グループ化',
       subText: 'Ctrl + G',
       handler: props.elementInfo.groupId ? uncombineElements : combineElements,
       hide: !props.isMultiSelect,
     },
     {
-      text: '全选',
+      text: 'すべて選択',
       subText: 'Ctrl + A',
       handler: selectAllElements,
     },
     {
-      text: '锁定',
+      text: 'ロック',
       subText: 'Ctrl + L',
       handler: lockElement,
     },
     {
-      text: '删除',
+      text: '削除',
       subText: 'Delete',
       handler: deleteElement,
     },

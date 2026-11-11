@@ -4,7 +4,7 @@
     <Editor v-else-if="_isPC" />
     <Mobile v-else />
   </template>
-  <FullscreenSpin tip="数据初始化中，请稍等 ..." v-else  loading :mask="false" />
+  <FullscreenSpin tip="プレゼンテーションを読み込んでいます…" v-else  loading :mask="false" />
 </template>
 
 <script lang="ts" setup>
@@ -69,7 +69,7 @@ const loadStartupProject = async () => {
     return true
   }
   catch {
-    message.error('无法打开启动演示文稿')
+    message.error('起動時のプレゼンテーションを開けませんでした')
     return false
   }
 }

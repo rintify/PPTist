@@ -25,7 +25,7 @@ interface ExportImageConfig {
 
 export default () => {
   const slidesStore = useSlidesStore()
-  const { slides, theme, viewportRatio, title, viewportSize } = storeToRefs(slidesStore)
+  const { slides, theme, viewportRatio, title, viewportSize, slideStructure } = storeToRefs(slidesStore)
 
   const defaultFontSize = 16
 
@@ -73,7 +73,7 @@ export default () => {
         saveAs(dataUrl, `${title.value}.${format}`)
       }).catch(() => {
         exporting.value = false
-        message.error('导出图片失败')
+        message.error('画像を書き出せませんでした')
       })
     }, 200)
   }
@@ -114,7 +114,7 @@ export default () => {
         pptx.writeFile({ fileName: `${title.value}.pptx` }).then(() => exporting.value = false)
       }).catch(() => {
         exporting.value = false
-        message.error('导出失败')
+        message.error('書き出せませんでした')
       })
     }, 200)
   }
@@ -487,6 +487,7 @@ export default () => {
     const pptx = new pptxgen()
     setPPTXLayout(pptx)
     let formulaFontCSS: string | undefined
+    const structureElements = slideStructure.value.elementsBySlideId
 
     if (masterOverwrite) {
       const { color: bgColor, alpha: bgAlpha } = formatColor(theme.value.backgroundColor)
@@ -544,7 +545,7 @@ export default () => {
 
       if (!slide.elements) continue
 
-      for (const el of slide.elements) {
+      for (const el of [...slide.elements, ...(structureElements[slide.id] || [])]) {
         if (el.type === 'text') {
           const textProps = formatHTML(el.content)
           const inset = el.inset || [10, 10, 10, 10]
@@ -555,7 +556,7 @@ export default () => {
             w: el.width / ratioPx2Inch.value,
             h: el.height / ratioPx2Inch.value,
             fontSize: defaultFontSize / ratioPx2Pt.value,
-            fontFace: '微软雅黑',
+            fontFace: 'Microsoft YaHei',
             color: '#000000',
             valign: el.vAlign || 'top',
             margin: [inset[3], inset[1], inset[2], inset[0]].map(item => item / ratioPx2Pt.value) as [number, number, number, number],
@@ -701,7 +702,7 @@ export default () => {
               w: el.width / ratioPx2Inch.value,
               h: el.height / ratioPx2Inch.value,
               fontSize: defaultFontSize / ratioPx2Pt.value,
-              fontFace: '微软雅黑',
+              fontFace: 'Microsoft YaHei',
               color: '#000000',
               paraSpaceBefore: 5 / ratioPx2Pt.value,
               margin: [inset[3], inset[1], inset[2], inset[0]].map(item => item / ratioPx2Pt.value) as [number, number, number, number],
@@ -893,7 +894,7 @@ export default () => {
                 underline: { style: 'none' },
                 align: cell.style?.align || 'left',
                 valign: cell.style?.vAlign || 'top',
-                fontFace: cell.style?.fontname || '微软雅黑',
+                fontFace: cell.style?.fontname || 'Microsoft YaHei',
                 fontSize: (cell.style?.fontsize ? parseInt(cell.style?.fontsize) : 14) / ratioPx2Pt.value,
               }
               let fillColor: FormatColor | null = null
@@ -973,7 +974,7 @@ export default () => {
           }
           catch {
             exporting.value = false
-            message.error('导出失败')
+            message.error('書き出せませんでした')
             return
           }
           finally {
@@ -1025,7 +1026,7 @@ export default () => {
     setTimeout(() => {
       pptx.writeFile({ fileName: `${title.value}.pptx` }).then(() => exporting.value = false).catch(() => {
         exporting.value = false
-        message.error('导出失败')
+        message.error('書き出せませんでした')
       })
     }, 200)
   }

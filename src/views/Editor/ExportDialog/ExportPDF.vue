@@ -22,17 +22,17 @@
     </div>
     <div class="configs">
       <div class="row">
-        <div class="title">导出范围：</div>
+        <div class="title">出力範囲：</div>
         <RadioGroup
           class="config-item"
           v-model:value="rangeType"
         >
-          <RadioButton style="width: 50%;" value="all">全部</RadioButton>
-          <RadioButton style="width: 50%;" value="current">当前页</RadioButton>
+          <RadioButton style="width: 50%;" value="all">すべて</RadioButton>
+          <RadioButton style="width: 50%;" value="current">現在のページ</RadioButton>
         </RadioGroup>
       </div>
       <div class="row">
-        <div class="title">每页数量：</div>
+        <div class="title">ページごとの件数：</div>
         <Select 
           class="config-item"
           v-model:value="count"
@@ -44,19 +44,19 @@
         />
       </div>
       <div class="row">
-        <div class="title">边缘留白：</div>
+        <div class="title">内側の余白：</div>
         <div class="config-item">
           <Switch v-model:value="padding" />
         </div>
       </div>
       <div class="tip">
-        建议：请在弹出的打印窗口中勾选「背景图形」选项，边距选择「默认」。
+        印刷画面で「背景のグラフィック」をオンにし、余白は「既定」を選択してください
       </div>
     </div>
 
     <div class="btns">
-      <Button class="btn export" type="primary" @click="expPDF()"><i-icon-park-outline:download /> 打印 / 导出 PDF</Button>
-      <Button class="btn close" @click="emit('close')">关闭</Button>
+      <Button class="btn export" type="primary" @click="expPDF()"><i-icon-park-outline:download /> 印刷・PDF に保存</Button>
+      <Button class="btn close" @click="emit('close')">閉じる</Button>
     </div>
   </div>
 </template>

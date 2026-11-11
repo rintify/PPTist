@@ -59,6 +59,8 @@ To open a local `.pptist` file at startup, place it in a local-only directory un
 
 Presentation files with KaTeX formula elements use this fork for formula rendering and editing.
 
+The editor UI is in Japanese. Open the **構成** tab to set a slide's layout, heading and references. Page numbers follow the current slide order. A **自動目次** slide lists sections in order and includes titled slides before the first section. Native PPTist and JSON exports retain the fields. Screen, image, PDF and PPTX output use their generated layout.
+
 
 # 📚 Features
 ### Basic Features

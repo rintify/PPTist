@@ -92,6 +92,13 @@
           :openLinkDialog="openLinkDialog"
           v-show="!hiddenElementIdList.includes(element.id)"
         />
+        <ThumbnailElement
+          v-for="(element, index) in slideStructure.elementsBySlideId[currentSlide.id]"
+          :key="element.id"
+          :elementInfo="element"
+          :elementIndex="elementList.length + index + 1"
+          class="slide-structure-element"
+        />
       </div>
     </div>
 
@@ -109,6 +116,7 @@
 </template>
 
 <script lang="ts" setup>
+import ThumbnailElement from '@/views/components/ThumbnailSlide/ThumbnailElement.vue'
 import { nextTick, onMounted, onUnmounted, provide, ref, watch, useTemplateRef } from 'vue'
 import { throttle } from 'lodash'
 import { storeToRefs } from 'pinia'
@@ -171,7 +179,7 @@ const {
   canvasScale,
   textFormatPainter,
 } = storeToRefs(mainStore)
-const { currentSlide } = storeToRefs(useSlidesStore())
+const { currentSlide, slideStructure } = storeToRefs(useSlidesStore())
 const { ctrlKeyState, spaceKeyState } = storeToRefs(useKeyboardStore())
 
 const viewportRef = useTemplateRef<HTMLElement>('viewportRef')
@@ -283,7 +291,7 @@ const toggleRuler = () => {
 // 开关浮动菜单
 const toggleBubbleMenu = () => {
   mainStore.setBubbleMenuState(!showBubbleMenu.value)
-  message.success(`元素气泡菜单已${showBubbleMenu.value ? '启用' : '禁用'}`)
+  message.success(`要素のミニツールバーを${showBubbleMenu.value ? '有効にしました' : '無効にしました'}`)
 }
 
 // 在鼠标绘制的范围插入元素
@@ -311,26 +319,26 @@ const insertCustomShape = (data: CreateCustomShapeData) => {
 const contextmenus = (): ContextmenuItem[] => {
   return [
     {
-      text: '粘贴',
+      text: '貼り付け',
       subText: 'Ctrl + V',
       handler: pasteElement,
     },
     {
-      text: '全选',
+      text: 'すべて選択',
       subText: 'Ctrl + A',
       handler: selectAllElements,
     },
     {
-      text: '标尺',
+      text: 'ルーラー',
       subText: showRuler.value ? '√' : '',
       handler: toggleRuler,
     },
     {
-      text: '网格线',
+      text: 'グリッド線',
       handler: () => mainStore.setGridLineSize(gridLineSize.value ? 0 : 50),
       children: [
         {
-          text: '无',
+          text: 'なし',
           subText: gridLineSize.value === 0 ? '√' : '',
           handler: () => mainStore.setGridLineSize(0),
         },
@@ -352,17 +360,17 @@ const contextmenus = (): ContextmenuItem[] => {
       ],
     },
     {
-      text: '重置当前页',
+      text: 'このページをリセット',
       handler: deleteAllElements,
     },
     {
-      text: '气泡菜单',
+      text: 'ミニツールバー',
       subText: showBubbleMenu.value ? '√' : '',
       handler: toggleBubbleMenu,
     },
     { divider: true },
     {
-      text: '幻灯片放映',
+      text: 'スライドショー',
       subText: 'F5',
       handler: enterScreeningFromStart,
     },
@@ -373,6 +381,10 @@ provide(injectKeySlideScale, canvasScale)
 </script>
 
 <style lang="scss" scoped>
+.slide-structure-element {
+  pointer-events: none;
+}
+
 .canvas {
   height: 100%;
   user-select: none;

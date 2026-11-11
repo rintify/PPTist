@@ -10,12 +10,12 @@
       display: 'flex',
       flexDirection: 'column',
     }"
-    title="图片库（来自 pexels.com）" 
+    title="画像ライブラリ（Pexels）"
     @close="close()"
   >
-    <div class="container" v-loading="{ state: loading, text: '加载中...' }">
+    <div class="container" v-loading="{ state: loading, text: '読み込み中...' }">
       <div class="tools">
-        <Input class="input" v-model:value="searchWord" placeholder="搜索图片" @enter="search()">
+        <Input class="input" v-model:value="searchWord" placeholder="画像を検索" @enter="search()">
           <template #prefix>
             <Popover class="more-icon" trigger="click" v-model:value="orientationVisible">
               <template #content>
@@ -48,7 +48,7 @@
           <div class="img-item">
             <img :src="props.src">
             <div class="mask">
-              <Button type="primary" size="small" @click="createImageElement(props.src)">插入</Button>
+              <Button type="primary" size="small" @click="createImageElement(props.src)">挿入</Button>
             </div>
           </div>
         </template>
@@ -96,16 +96,16 @@ const orientationOptions: {
   key: Orientation
   label: string
 }[] = [
-  { key: 'all', label: '全部' },
-  { key: 'landscape', label: '横向' },
-  { key: 'portrait', label: '纵向' },
-  { key: 'square', label: '方形' },
+  { key: 'all', label: 'すべて' },
+  { key: 'landscape', label: '横' },
+  { key: 'portrait', label: '縦' },
+  { key: 'square', label: '四角' },
 ]
 const orientationMap: Record<string, string> = {
-  'all': '全部',
-  'landscape': '横向',
-  'portrait': '纵向',
-  'square': '方形',
+  'all': 'すべて',
+  'landscape': '横',
+  'portrait': '縦',
+  'square': '四角',
 }
 
 const close = () => {
@@ -113,12 +113,12 @@ const close = () => {
 }
 
 onMounted(() => {
-  search('风景')
+  search('風景')
 })
 
 const search = (q?: string) => {  
   const query = q || searchWord.value
-  if (!query) return message.error('请输入搜索关键词')
+  if (!query) return message.error('検索キーワードを入力')
 
   loading.value = true
   page.value = 1
@@ -153,7 +153,7 @@ const loadMore = () => {
   page.value += 1
 
   api.searchImage({
-    query: searchWord.value || '风景',
+    query: searchWord.value || '風景',
     per_page: perPage.value,
     page: page.value,
     orientation: orientation.value,

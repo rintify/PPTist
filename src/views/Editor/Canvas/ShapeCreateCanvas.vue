@@ -165,7 +165,7 @@ const keydownListener = (e: KeyboardEvent) => {
   if (key === KEYS.ENTER) create()
 }
 onMounted(() => {
-  message.success('点击绘制任意形状，首尾闭合完成绘制，按 ESC 键或鼠标右键取消，按 ENTER 键提前完成', {
+  message.success('クリックで点を追加し、始点に戻ると図形が閉じます。Enter で確定、Esc または右クリックでキャンセルします', {
     duration: 0,
   })
   document.addEventListener('keydown', keydownListener)

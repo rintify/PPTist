@@ -3,14 +3,14 @@
     class="notes-panel" 
     :width="300" 
     :height="130" 
-    title="幻灯片类型标注" 
+    title="スライドの種類を設定"
     :left="-270" 
     :top="90"
     @close="close()"
   >
     <div class="container">
       <div class="row">
-        <div style="width: 40%;">当前页面类型：</div>
+        <div style="width: 40%;">ページの種類：</div>
         <Select
           style="width: 60%;"
           :value="slideType"
@@ -19,7 +19,7 @@
         />
       </div>
       <div class="row" v-if="handleElement && (handleElement.type === 'text' || (handleElement.type === 'shape' && handleElement.text))">
-        <div style="width: 40%;">当前文本类型：</div>
+        <div style="width: 40%;">テキストの種類：</div>
         <Select
           style="width: 60%;"
           :value="textType"
@@ -28,7 +28,7 @@
         />
       </div>
       <div class="row" v-else-if="handleElement && handleElement.type === 'image'">
-        <div style="width: 40%;">当前图片类型：</div>
+        <div style="width: 40%;">画像の種類：</div>
         <Select
           style="width: 60%;"
           :value="imageType"
@@ -36,7 +36,7 @@
           :options="imageTypeOptions"
         />
       </div>
-      <div class="placeholder" v-else>选中图片、文字、带文字的形状，标记类型</div>
+      <div class="placeholder" v-else>画像、文字、文字付きの図形を選択して種類を設定</div>
     </div>
   </MoveablePanel>
 </template>
@@ -56,33 +56,33 @@ const { currentSlide } = storeToRefs(slidesStore)
 const { handleElement, handleElementId } = storeToRefs(mainStore)
 
 const slideTypeOptions = ref<{ label: string; value: SlideType | '' }[]>([
-  { label: '未标记类型', value: '' },
-  { label: '封面页', value: 'cover' },
-  { label: '目录页', value: 'contents' },
-  { label: '过渡页', value: 'transition' },
-  { label: '内容页', value: 'content' },
-  { label: '结束页', value: 'end' },
+  { label: '種類未設定', value: '' },
+  { label: '表紙', value: 'cover' },
+  { label: '目次ページ', value: 'contents' },
+  { label: '区切りページ', value: 'transition' },
+  { label: '本文ページ', value: 'content' },
+  { label: '終了ページ', value: 'end' },
 ])
 
 const textTypeOptions = ref<{ label: string; value: TextType | '' }[]>([
-  { label: '未标记类型', value: '' },
-  { label: '标题', value: 'title' },
-  { label: '副标题', value: 'subtitle' },
-  { label: '正文', value: 'content' },
-  { label: '列表项目', value: 'item' },
-  { label: '列表项标题', value: 'itemTitle' },
-  { label: '注释', value: 'notes' },
-  { label: '页眉', value: 'header' },
-  { label: '页脚', value: 'footer' },
-  { label: '节编号', value: 'partNumber' },
-  { label: '项目编号', value: 'itemNumber' },
+  { label: '種類未設定', value: '' },
+  { label: 'タイトル', value: 'title' },
+  { label: 'サブタイトル', value: 'subtitle' },
+  { label: '本文', value: 'content' },
+  { label: 'リスト項目', value: 'item' },
+  { label: 'リスト項目のタイトル', value: 'itemTitle' },
+  { label: '注釈', value: 'notes' },
+  { label: 'ヘッダー', value: 'header' },
+  { label: 'フッター', value: 'footer' },
+  { label: '章番号', value: 'partNumber' },
+  { label: '項目番号', value: 'itemNumber' },
 ])
 
 const imageTypeOptions = ref<{ label: string; value: ImageType | '' }[]>([
-  { label: '未标记类型', value: '' },
-  { label: '页面插图', value: 'pageFigure' },
-  { label: '项目插图', value: 'itemFigure' },
-  { label: '背景图', value: 'background' },
+  { label: '種類未設定', value: '' },
+  { label: 'ページの挿絵', value: 'pageFigure' },
+  { label: '項目の挿絵', value: 'itemFigure' },
+  { label: '背景画像', value: 'background' },
 ])
 
 const slideType = computed(() => currentSlide.value?.type || '')

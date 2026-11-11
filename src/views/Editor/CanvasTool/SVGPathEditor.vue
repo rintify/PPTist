@@ -86,17 +86,17 @@
             :value="activeSegmentType"
             @update:value="updateSegmentType"
           >
-            <RadioButton value="L" :disabled="activePointIndex === 0">直线</RadioButton>
-            <RadioButton value="Q" :disabled="activePointIndex === 0">曲线Q</RadioButton>
-            <RadioButton value="C" :disabled="activePointIndex === 0">曲线C</RadioButton>
-            <RadioButton value="A" :disabled="activePointIndex === 0">圆弧</RadioButton>
+            <RadioButton value="L" :disabled="activePointIndex === 0">直線</RadioButton>
+            <RadioButton value="Q" :disabled="activePointIndex === 0">二次曲線</RadioButton>
+            <RadioButton value="C" :disabled="activePointIndex === 0">三次曲線</RadioButton>
+            <RadioButton value="A" :disabled="activePointIndex === 0">円弧</RadioButton>
           </RadioGroup>
         </div>
 
         <Divider :margin="20" />
 
         <div class="panel-section">
-          <div class="section-title">坐标：</div>
+          <div class="section-title">座標：</div>
           <div class="input-row">
             <NumberInput
               class="number-input"
@@ -124,7 +124,7 @@
         <template v-if="activePoint.q">
           <Divider :margin="20" />
           <div class="panel-section">
-            <div class="section-title">控制点：</div>
+            <div class="section-title">制御点：</div>
             <div class="input-row">
               <NumberInput
                 class="number-input"
@@ -153,7 +153,7 @@
         <template v-if="activePoint.c">
           <Divider :margin="20" />
           <div class="panel-section">
-            <div class="section-title">控制点：</div>
+            <div class="section-title">制御点：</div>
             <div class="input-row">
               <NumberInput
                 class="number-input"
@@ -204,7 +204,7 @@
         <template v-if="activePoint.a">
           <Divider :margin="20" />
           <div class="panel-section">
-            <div class="section-title">圆弧：</div>
+            <div class="section-title">円弧：</div>
             <div class="input-row">
               <NumberInput
                 class="number-input"
@@ -236,12 +236,12 @@
                 :value="activePoint.a.rot"
                 @update:value="value => updateArcParam('rot', value)"
               >
-                <template #prefix>旋转：</template>
+                <template #prefix>回転：</template>
               </NumberInput>
             </div>
             <div class="checkbox-row">
-              <Checkbox :value="activePoint.a.laf === 1" @update:value="value => updateArcParam('laf', value ? 1 : 0)">大弧</Checkbox>
-              <Checkbox :value="activePoint.a.sf === 1" @update:value="value => updateArcParam('sf', value ? 1 : 0)">顺时针</Checkbox>
+              <Checkbox :value="activePoint.a.laf === 1" @update:value="value => updateArcParam('laf', value ? 1 : 0)">長い円弧</Checkbox>
+              <Checkbox :value="activePoint.a.sf === 1" @update:value="value => updateArcParam('sf', value ? 1 : 0)">時計回り</Checkbox>
             </div>
           </div>
         </template>
@@ -249,7 +249,7 @@
         <Divider :margin="20" />
 
         <div class="panel-section">
-          <Checkbox :value="closePath" @update:value="value => closePath = value">闭合路径</Checkbox>
+          <Checkbox :value="closePath" @update:value="value => closePath = value">パスを閉じる</Checkbox>
         </div>
 
         <Divider :margin="20" />
@@ -261,10 +261,10 @@
     </div>
 
     <div class="footer">
-      <div class="tooltips">Tips: 双击追加直线，右键追加线段或删除点；拖动端点和控制点调整路径。</div>
+      <div class="tooltips">ダブルクリックで直線を追加し、右クリックで線分の追加や点の削除ができます。端点や制御点をドラッグしてパスを調整します</div>
       <div class="footer-actions">
-        <Button @click="emit('close')">关闭</Button>
-        <Button type="primary" :disabled="!canInsert" @click="insert()">确认</Button>
+        <Button @click="emit('close')">閉じる</Button>
+        <Button type="primary" :disabled="!canInsert" @click="insert()">確認</Button>
       </div>
     </div>
   </div>
@@ -542,24 +542,24 @@ const prepareContextmenu = (e: MouseEvent) => {
 const contextmenus = (): ContextmenuItem[] => {
   return [
     {
-      text: '追加直线',
+      text: '直線を追加',
       handler: () => addPoint('L'),
     },
     {
-      text: '追加二次曲线',
+      text: '二次曲線を追加',
       handler: () => addPoint('Q'),
     },
     {
-      text: '追加三次曲线',
+      text: '三次曲線を追加',
       handler: () => addPoint('C'),
     },
     {
-      text: '追加弧线',
+      text: '円弧を追加',
       handler: () => addPoint('A'),
     },
     { divider: true },
     {
-      text: '删除当前点',
+      text: 'この点を削除',
       disable: activePointIndex.value === 0,
       handler: removeActivePoint,
     },

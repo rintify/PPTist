@@ -80,6 +80,7 @@ export default () => {
     const emptySlide: Slide = {
       id: nanoid(10),
       elements: [],
+      structure: slides.value.some(slide => slide.structure) ? { kind: 'standard' } : undefined,
       background: {
         type: 'solid',
         color: theme.value.backgroundColor,

@@ -177,7 +177,7 @@ onMounted(() => {
       input: handleInput,
     },
   }, {
-    placeholder: '点击输入演讲者备注',
+    placeholder: 'クリックして発表者ノートを入力',
   })
 
   menuInstance.value = tippy(editorViewRef.value!, {

@@ -16,7 +16,7 @@
         <span :class="['animation-block', item.value]" :data-label="item.label">{{item.label}}</span>
       </button>
     </div>
-    <Button style="width: 100%;" @click="applyAllSlide()"><i-icon-park-outline:check /> 应用到全部</Button>
+    <Button style="width: 100%;" @click="applyAllSlide()"><i-icon-park-outline:check /> すべてに適用</Button>
   </div>
 </template>
 
@@ -55,7 +55,7 @@ const applyAllSlide = () => {
     }
   })
   slidesStore.setSlides(newSlides)
-  message.success('已应用到全部')
+  message.success('すべてのページに適用しました')
   addHistorySnapshot()
 }
 </script>

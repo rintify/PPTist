@@ -15,12 +15,13 @@
 <script lang="ts" setup>
 import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useMainStore } from '@/store'
+import { useMainStore, useSlidesStore } from '@/store'
 import { ToolbarStates } from '@/types/toolbar'
 
 import ElementStylePanel from './ElementStylePanel/index.vue'
 import ElementPositionPanel from './ElementPositionPanel.vue'
 import ElementAnimationPanel from './ElementAnimationPanel.vue'
+import SlideStructurePanel from './SlideStructurePanel.vue'
 import SlideDesignPanel from './SlideDesignPanel/index.vue'
 import SlideAnimationPanel from './SlideAnimationPanel.vue'
 import MultiPositionPanel from './MultiPositionPanel.vue'
@@ -30,19 +31,22 @@ import Tabs from '@/components/Tabs.vue'
 const mainStore = useMainStore()
 const { activeElementIdList, activeElementList, activeGroupElementId, toolbarState } = storeToRefs(mainStore)
 
+const { currentSlide, slides } = storeToRefs(useSlidesStore())
+
 const elementTabs = [
-  { label: '样式', key: ToolbarStates.EL_STYLE },
+  { label: 'スタイル', key: ToolbarStates.EL_STYLE },
   { label: '位置', key: ToolbarStates.EL_POSITION },
-  { label: '动画', key: ToolbarStates.EL_ANIMATION },
+  { label: 'アニメーション', key: ToolbarStates.EL_ANIMATION },
 ]
 const slideTabs = [
-  { label: '设计', key: ToolbarStates.SLIDE_DESIGN },
-  { label: '切换', key: ToolbarStates.SLIDE_ANIMATION },
-  { label: '动画', key: ToolbarStates.EL_ANIMATION },
+  { label: '構成', key: ToolbarStates.SLIDE_STRUCTURE },
+  { label: 'デザイン', key: ToolbarStates.SLIDE_DESIGN },
+  { label: '画面切り替え', key: ToolbarStates.SLIDE_ANIMATION },
+  { label: 'アニメーション', key: ToolbarStates.EL_ANIMATION },
 ]
 const multiSelectTabs = [
-  { label: '样式（多选）', key: ToolbarStates.MULTI_STYLE },
-  { label: '位置（多选）', key: ToolbarStates.MULTI_POSITION },
+  { label: 'スタイル（複数選択）', key: ToolbarStates.MULTI_STYLE },
+  { label: '位置（複数選択）', key: ToolbarStates.MULTI_POSITION },
 ]
 
 const setToolbarState = (value: ToolbarStates) => {
@@ -50,7 +54,9 @@ const setToolbarState = (value: ToolbarStates) => {
 }
 
 const currentTabs = computed(() => {
-  if (!activeElementIdList.value.length) return slideTabs
+  if (!activeElementIdList.value.length) {
+    return currentSlide.value?.structure ? slideTabs : [slideTabs[1], slideTabs[0], ...slideTabs.slice(2)]
+  }
   else if (activeElementIdList.value.length > 1) {
     if (!activeGroupElementId.value) return multiSelectTabs
 
@@ -60,6 +66,10 @@ const currentTabs = computed(() => {
   }
   return elementTabs
 })
+
+if (slides.value.some(slide => slide.structure) && toolbarState.value === ToolbarStates.SLIDE_DESIGN) {
+  mainStore.setToolbarState(ToolbarStates.SLIDE_STRUCTURE)
+}
 
 watch(currentTabs, () => {
   const currentTabsValue: ToolbarStates[] = currentTabs.value.map(tab => tab.key)
@@ -73,6 +83,7 @@ const currentPanelComponent = computed(() => {
     [ToolbarStates.EL_STYLE]: ElementStylePanel,
     [ToolbarStates.EL_POSITION]: ElementPositionPanel,
     [ToolbarStates.EL_ANIMATION]: ElementAnimationPanel,
+    [ToolbarStates.SLIDE_STRUCTURE]: SlideStructurePanel,
     [ToolbarStates.SLIDE_DESIGN]: SlideDesignPanel,
     [ToolbarStates.SLIDE_ANIMATION]: SlideAnimationPanel,
     [ToolbarStates.MULTI_STYLE]: MultiStylePanel,

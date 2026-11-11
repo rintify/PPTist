@@ -184,7 +184,7 @@ const handleProgress = () => {
   loaded.value = audioRef.value?.buffered.length ? audioRef.value.buffered.end(audioRef.value.buffered.length - 1) : 0
 }
 
-const handleError = () => message.error('视频加载失败')
+const handleError = () => message.error('動画を読み込めませんでした')
 
 const thumbMove = (e: MouseEvent | TouchEvent) => {
   if (!audioRef.value || !playBarWrapRef.value) return
