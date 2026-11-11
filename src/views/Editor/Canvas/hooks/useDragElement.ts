@@ -267,7 +267,7 @@ export default (
       const _alignmentLines: AlignmentLineProps[] = []
       let isVerticalAdsorbed = false
       let isHorizontalAdsorbed = false
-      for (let i = 0; i < horizontalLines.length; i++) {
+      for (let i = 0; i < horizontalLines.length && !(e instanceof MouseEvent && e.altKey); i++) {
         const { value, range } = horizontalLines[i]
         const min = Math.min(...range, targetMinX, targetMaxX)
         const max = Math.max(...range, targetMinX, targetMaxX)
@@ -288,7 +288,7 @@ export default (
           _alignmentLines.push({type: 'horizontal', axis: {x: min - 50, y: value}, length: max - min + 100})
         }
       }
-      for (let i = 0; i < verticalLines.length; i++) {
+      for (let i = 0; i < verticalLines.length && !(e instanceof MouseEvent && e.altKey); i++) {
         const { value, range } = verticalLines[i]
         const min = Math.min(...range, targetMinY, targetMaxY)
         const max = Math.max(...range, targetMinY, targetMaxY)

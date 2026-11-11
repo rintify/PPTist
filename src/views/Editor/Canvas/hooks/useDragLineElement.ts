@@ -24,7 +24,6 @@ export default (elementList: Ref<PPTElement[]>) => {
     let isMouseDown = true
     const isEndpoint = command === OperateLineHandlers.START || command === OperateLineHandlers.END
 
-    const sorptionRange = 8 / canvasScale.value
 
     const startPageX = e.pageX
     const startPageY = e.pageY
@@ -82,6 +81,7 @@ export default (elementList: Ref<PPTElement[]>) => {
 
     let hasMoved = false
     const handleMousemove = (e: MouseEvent) => {
+      const sorptionRange = e.altKey ? 0 : 8 / canvasScale.value
       if (!isMouseDown) return
       if (e.pageX === startPageX && e.pageY === startPageY && !hasMoved) return
       hasMoved = true
@@ -114,7 +114,7 @@ export default (elementList: Ref<PPTElement[]>) => {
       if (command === OperateLineHandlers.START) {
         startX = startX + moveX
         startY = startY + moveY
-        connection = findLineConnectionPoint(connectionPoints.value, { x: startX, y: startY }, sorptionRange)
+        connection = e.altKey ? undefined : findLineConnectionPoint(connectionPoints.value, { x: startX, y: startY }, sorptionRange)
 
         if (Math.abs(startX - endX) < sorptionRange) startX = endX
         if (Math.abs(startY - endY) < sorptionRange) startY = endY
@@ -135,7 +135,7 @@ export default (elementList: Ref<PPTElement[]>) => {
       else if (command === OperateLineHandlers.END) {
         endX = endX + moveX
         endY = endY + moveY
-        connection = findLineConnectionPoint(connectionPoints.value, { x: endX, y: endY }, sorptionRange)
+        connection = e.altKey ? undefined : findLineConnectionPoint(connectionPoints.value, { x: endX, y: endY }, sorptionRange)
 
         if (Math.abs(startX - endX) < sorptionRange) endX = startX
         if (Math.abs(startY - endY) < sorptionRange) endY = startY

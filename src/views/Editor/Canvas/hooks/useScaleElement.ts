@@ -241,7 +241,12 @@ export default (
     // 对齐吸附方法
     // 将收集到的对齐吸附线与计算的目标元素当前的位置大小相关数据做对比，差值小于设定的值时执行自动缩放校正
     // 水平和垂直两个方向需要分开计算
+    let disableSnap = false
     const alignedAdsorption = (currentX: number | null, currentY: number | null) => {
+      if (disableSnap) {
+        alignmentLines.value = []
+        return { offsetX: 0, offsetY: 0 }
+      }
       const sorptionRange = 5
 
       const _alignmentLines: AlignmentLineProps[] = []
@@ -280,6 +285,7 @@ export default (
     }
 
     const handleMousemove = (e: MouseEvent | TouchEvent) => {
+      disableSnap = e instanceof MouseEvent && e.altKey
       if (!isMouseDown) return
 
       const currentPageX = e instanceof MouseEvent ? e.pageX : e.changedTouches[0].pageX
