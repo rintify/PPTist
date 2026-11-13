@@ -22,6 +22,7 @@ interface FormatedAnimation {
 
 export interface SlidesState {
   title: string
+  localProjectRevision: string | null
   theme: SlideTheme
   slides: Slide[]
   slideIndex: number
@@ -32,6 +33,7 @@ export interface SlidesState {
 
 export const useSlidesStore = defineStore('slides', {
   state: (): SlidesState => ({
+    localProjectRevision: null,
     title: '無題のプレゼンテーション', // 幻灯片标题
     theme: {
       themeColors: ['#5b9bd5', '#ed7d31', '#a5a5a5', '#ffc000', '#4472c4', '#70ad47'],
@@ -67,7 +69,7 @@ export const useSlidesStore = defineStore('slides', {
   }),
 
   getters: {
-    slideStructure: state => buildSlideStructure(state.slides, state.viewportSize, state.viewportRatio),
+    slideStructure: state => buildSlideStructure(state.slides, state.viewportSize, state.viewportRatio, state.theme),
 
     currentSlide(state) {
       return state.slides[state.slideIndex]

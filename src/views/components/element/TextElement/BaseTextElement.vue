@@ -22,7 +22,7 @@
           textShadow: shadowStyle,
           lineHeight: elementInfo.lineHeight,
           letterSpacing: (elementInfo.wordSpace || 0) + 'px',
-          color: elementInfo.defaultColor,
+          color: elementInfo.textTemplate?.kind === 'caption' ? MUTED_SLIDE_TEXT : elementInfo.defaultColor,
           fontFamily: elementInfo.defaultFontName,
           writingMode: elementInfo.vertical ? 'vertical-rl' : 'horizontal-tb',
           padding: `${inset[0]}px ${inset[1]}px ${inset[2]}px ${inset[3]}px`,
@@ -40,7 +40,7 @@
         <div 
           class="text ProseMirror-static" 
           :class="{ 'thumbnail': target === 'thumbnail' }"
-          v-html="elementInfo.content"
+          v-html="renderedContent"
         ></div>
       </div>
     </div>
@@ -49,9 +49,11 @@
 
 <script lang="ts" setup>
 import { computed, type CSSProperties } from 'vue'
+import { MUTED_SLIDE_TEXT } from '@/configs/slideAppearance'
 import type { PPTTextElement } from '@/types/slides'
 import ElementOutline from '@/views/components/element/ElementOutline.vue'
 
+import { renderInlineText } from '@/utils/inlineText'
 import useElementShadow from '@/views/components/element/hooks/useElementShadow'
 
 const props = defineProps<{
@@ -59,6 +61,10 @@ const props = defineProps<{
   target?: string
 }>()
 
+const renderedContent = computed(() => renderInlineText(props.elementInfo.content, {
+  citations: props.elementInfo.textType !== 'footer',
+  caption: props.elementInfo.textTemplate?.kind === 'caption',
+}).html)
 const shadow = computed(() => props.elementInfo.shadow)
 const { shadowStyle } = useElementShadow(shadow)
 const inset = computed(() => props.elementInfo.inset || [10, 10, 10, 10])

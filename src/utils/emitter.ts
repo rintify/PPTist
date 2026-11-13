@@ -3,6 +3,7 @@ import type { TableTextAttrs } from './prosemirror/table'
 
 export const enum EmitterEvents {
   RICH_TEXT_COMMAND = 'RICH_TEXT_COMMAND',
+  RUBY_SELECTION = 'RUBY_SELECTION',
   TABLE_COMMAND = 'TABLE_COMMAND',
   TABLE_TEXT_COMMAND = 'TABLE_TEXT_COMMAND',
   SYNC_RICH_TEXT_ATTRS_TO_STORE = 'SYNC_RICH_TEXT_ATTRS_TO_STORE',
@@ -33,6 +34,7 @@ export interface TableTextCommand {
 
 type Events = {
   [EmitterEvents.RICH_TEXT_COMMAND]: RichTextCommand
+  [EmitterEvents.RUBY_SELECTION]: { target: string; receive: (selection: { text: string; reading: string }) => void }
   [EmitterEvents.TABLE_COMMAND]: TableCommand
   [EmitterEvents.TABLE_TEXT_COMMAND]: TableTextCommand
   [EmitterEvents.SYNC_RICH_TEXT_ATTRS_TO_STORE]: void

@@ -1,6 +1,29 @@
 import { marks } from 'prosemirror-schema-basic'
 import type { MarkSpec } from 'prosemirror-model'
 
+const ruby: MarkSpec = {
+  attrs: { reading: {}, id: { default: '' }, size: { default: null } },
+  inclusive: false,
+  parseDOM: [{
+    tag: 'ruby[data-reading]',
+    contentElement: 'rb',
+    getAttrs: element => {
+      const dom = element as HTMLElement
+      const reading = dom.dataset.reading
+      if (!reading || !dom.querySelector('rb')) return false
+      const size = Number(dom.dataset.rubySize)
+      return { reading, id: dom.dataset.rubyId || '', size: Number.isFinite(size) && size > 0 ? size : null }
+    },
+  }],
+  toDOM: mark => {
+    const { reading, id, size } = mark.attrs
+    return ['ruby', { 'data-reading': reading, 'data-ruby-id': id, 'data-ruby-size': size },
+      ['rb', 0],
+      ['rt', { contenteditable: 'false', style: size ? `font-size: ${size}px;` : undefined }, reading],
+    ]
+  },
+}
+
 const subscript: MarkSpec = {
   excludes: 'subscript',
   parseDOM: [
@@ -153,7 +176,9 @@ const fontname: MarkSpec = {
     {
       style: 'font-family',
       getAttrs: fontname => {
-        return { fontname: fontname && typeof fontname === 'string' ? fontname.replace(/[\"\']/g, '') : '' }
+        if (typeof fontname !== 'string') return { fontname: '' }
+        const unquoted = fontname.replace(/["']/g, '')
+        return { fontname: CSS.supports('font-family', unquoted) ? unquoted : fontname }
       }
     },
   ],
@@ -204,6 +229,7 @@ const mark: MarkSpec = {
 const { em, strong, code } = marks
 
 export default {
+  ruby,
   em,
   strong,
   fontsize,

@@ -1,6 +1,6 @@
 <template>
   <div class="element-style-panel">
-    <component :is="currentPanelComponent"></component>
+    <component :is="currentPanelComponent" :key="handleElement?.id"></component>
   </div>
 </template>
 
@@ -10,6 +10,7 @@ import { storeToRefs } from 'pinia'
 import { useMainStore } from '@/store'
 import { ElementTypes } from '@/types/slides'
 
+import TextTemplatePanel from './TextTemplatePanel.vue'
 import TextStylePanel from './TextStylePanel.vue'
 import ImageStylePanel from './ImageStylePanel.vue'
 import ShapeStylePanel from './ShapeStylePanel.vue'
@@ -35,6 +36,7 @@ const panelMap = {
 const { handleElement } = storeToRefs(useMainStore())
 
 const currentPanelComponent = computed<unknown>(() => {
+  if (handleElement.value?.type === 'text' && handleElement.value.textTemplate?.kind === 'caption') return TextTemplatePanel
   return handleElement.value ? (panelMap[handleElement.value.type] || null) : null
 })
 </script>

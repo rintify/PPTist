@@ -202,7 +202,12 @@ export type TextInset = [number, number, number, number]
  *
  * vAlign?: 文本框内垂直对齐方向，仅fixedHeight为真时有效，默认top
  */
+export type TextTemplate =
+  | { kind: 'caption'; sourceLine?: boolean }
+  | { kind: 'formula-explanation' } // Legacy projects load these as ordinary text.
+
 export interface PPTTextElement extends PPTBaseElement {
+  textTemplate?: TextTemplate
   type: 'text'
   content: string
   defaultFontName: string
@@ -802,8 +807,11 @@ export interface SlideStructure {
   kind: 'none' | 'standard' | 'contents'
   title?: string
   subtitle?: string
+  childTitle?: string
+  highlightChildSlideId?: string
   references?: { text: string; url?: string }[]
   additionalSections?: string[]
+  highlightSectionId?: string
 }
 
 export interface Slide {

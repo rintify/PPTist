@@ -1,5 +1,6 @@
 export const FONTS = [
   { label: '既定のフォント', value: '' },
+  { label: 'M PLUS Rounded 1c', value: '"M PLUS Rounded 1c"' },
   { label: 'Source Han Sans', value: 'SourceHanSans' },
   { label: 'Source Han Serif', value: 'SourceHanSerif' },
   { label: 'WenDing PL KaiTi', value: 'WenDingPLKaiTi' },

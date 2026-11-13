@@ -1,4 +1,5 @@
 export const enum KEYS {
+  S = 'S',
   C = 'C',
   X = 'X',
   Z = 'Z',
@@ -43,6 +44,8 @@ export const HOTKEY_DOC: HotkeyItem[] = [
   {
     type: '一般',
     children: [
+      { label: 'プレゼンテーションを保存', value: '⌘ / Ctrl + S' },
+      { label: '編集箇所の参照をコピー', value: '⌘ + Shift + L / Ctrl + Shift + L' },
       { label: '切り取り', value: 'Ctrl + X' },
       { label: 'コピー', value: 'Ctrl + C' },
       { label: '貼り付け', value: 'Ctrl + V' },
@@ -73,15 +76,15 @@ export const HOTKEY_DOC: HotkeyItem[] = [
     type: 'スライドの編集',
     children: [
       { label: 'スライドを追加', value: 'Enter' },
-      { label: 'キャンバスを移動', value: 'Space + マウスでドラッグ' },
-      { label: 'キャンバスを拡大・縮小', value: 'Ctrl + マウスホイール' },
+      { label: 'キャンバスを移動', value: 'スクロール / Space + マウスでドラッグ' },
+      { label: 'キャンバスを拡大・縮小', value: 'ピンチ / Ctrl + マウスホイール' },
       { label: 'キャンバスを拡大', value: 'Ctrl + =' },
       { label: 'キャンバスを縮小', value: 'Ctrl + -' },
       { label: 'キャンバスを画面に合わせる', value: 'Ctrl + 0' },
       { label: '前のページ（要素の選択なし）', value: '↑' },
       { label: '次のページ（要素の選択なし）', value: '↓' },
-      { label: '前のページ', value: '上にスクロール / PgUp' },
-      { label: '次のページ', value: '下にスクロール / PgDown' },
+      { label: '前のページ', value: 'PgUp' },
+      { label: '次のページ', value: 'PgDown' },
       { label: 'テキストをすぐに作成', value: '空白をダブルクリック / T' },
       { label: '長方形をすぐに作成', value: 'R' },
       { label: '円をすぐに作成', value: 'O' },

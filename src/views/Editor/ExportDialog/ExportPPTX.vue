@@ -1,13 +1,12 @@
 <template>
   <div class="export-pptx-dialog">
     <div class="thumbnails-view">
-      <div class="thumbnails" ref="imageThumbnailsRef">
-        <ThumbnailSlide 
-          class="export-thumbnail" 
-          v-for="slide in renderSlides" 
-          :key="slide.id" 
-          :slide="slide" 
-          :size="1600" 
+      <div ref="imageThumbnailsRef">
+        <ThumbnailSlide
+          v-if="renderedSlide"
+          :key="renderedSlide.id"
+          :slide="renderedSlide"
+          :size="1600"
         />
       </div>
     </div>
@@ -30,7 +29,7 @@
           v-model:value="exportMode"
         >
           <RadioButton style="width: 50%;" value="standard">標準</RadioButton>
-          <RadioButton style="width: 50%;" value="image">画像のみ</RadioButton>
+          <RadioButton style="width: 50%;" value="image">画像（余白なし）</RadioButton>
         </RadioGroup>
       </div>
       <div class="row" style="margin-bottom: 32px" v-if="rangeType === 'custom'">
@@ -63,20 +62,24 @@
           書き出せる形式は AVI、MP4、MOV、WMV、MP3、WAV です。別のオリジンにあるファイルは書き出せません
         </div>
       </template>
+      <div class="tip" v-else>
+        各ページをPNG画像にして、スライド全面に配置します。
+      </div>
     </div>
     <div class="btns">
       <Button class="btn export" type="primary" @click="execExport()"><i-icon-park-outline:download /> PPTX を書き出す</Button>
       <Button class="btn close" @click="emit('close')">閉じる</Button>
     </div>
 
-    <FullscreenSpin :loading="exporting" tip="書き出し中…" />
+    <FullscreenSpin :loading="exporting" :tip="exportTip" />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, ref, shallowRef, useTemplateRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSlidesStore } from '@/store'
+import type { Slide } from '@/types/slides'
 import useExport from '@/hooks/useExport'
 
 import ThumbnailSlide from '@/views/components/ThumbnailSlide/index.vue'
@@ -101,6 +104,8 @@ const exportMode = ref<'standard' | 'image'>('standard')
 const range = ref<[number, number]>([1, slides.value.length])
 const masterOverwrite = ref(true)
 const ignoreMedia = ref(true)
+const renderedSlide = shallowRef<Slide | null>(null)
+const exportTip = ref('書き出し中…')
 
 const selectedSlides = computed(() => {
   if (rangeType.value === 'all') return slides.value
@@ -111,18 +116,27 @@ const selectedSlides = computed(() => {
   })
 })
 
-const renderSlides = computed(() => {
-  if (exportMode.value === 'standard') return []
-  return selectedSlides.value
-})
-
-const execExport = () => {
+const execExport = async () => {
+  if (exporting.value) return
   if (exportMode.value === 'standard') {
-    exportPPTX(selectedSlides.value, masterOverwrite.value, ignoreMedia.value)
-  } 
-  else {
-    const slideRefs = imageThumbnailsRef.value!.querySelectorAll('.export-thumbnail')
-    exportImagePPTX(slideRefs)
+    await exportPPTX(selectedSlides.value, masterOverwrite.value, ignoreMedia.value)
+    return
+  }
+
+  const slidesToExport = [...selectedSlides.value]
+  try {
+    await exportImagePPTX(slidesToExport, async (slide, page) => {
+      exportTip.value = `書き出し中…（${page} / ${slidesToExport.length}）`
+      renderedSlide.value = slide
+      await nextTick()
+      const thumbnail = imageThumbnailsRef.value?.firstElementChild
+      if (!(thumbnail instanceof HTMLElement)) throw new Error('Slide preview is unavailable')
+      return thumbnail
+    })
+  }
+  finally {
+    renderedSlide.value = null
+    exportTip.value = '書き出し中…'
   }
 }
 </script>

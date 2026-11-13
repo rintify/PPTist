@@ -1,5 +1,7 @@
 <template>
   <div class="text-style-panel">
+    <TextTemplatePanel />
+    <Divider />
     <div class="preset-style">
       <div 
         class="preset-style-item"
@@ -145,6 +147,7 @@
 </template>
 
 <script lang="ts" setup>
+import TextTemplatePanel from './TextTemplatePanel.vue'
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'

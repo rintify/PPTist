@@ -33,12 +33,33 @@
           章名（目次に反映）
           <input :value="section.title" @keydown.enter="commitInput" @change="renameSection">
         </label>
+        <label v-if="section?.title" class="field">
+          子タイトル（このページから開始）
+          <input
+            :value="structure.childTitle"
+            :placeholder="childTitle || '子タイトルを入力'"
+            @keydown.enter="commitInput"
+            @change="setChildTitle"
+          >
+        </label>
         <button v-if="!currentSlide.sectionTag" type="button" class="action" @click="startSection">このページから新しい章を始める</button>
         <button v-else type="button" class="action" @click="removeSection">この章区切りを解除</button>
       </div>
 
       <div v-else class="fields">
         <label class="field">
+          目次のフォーカス
+          <select :value="contentsFocus" @change="setContentsFocus">
+            <option value="">全体目次</option>
+            <optgroup v-for="item in focusSections" :key="item.sectionId" :label="item.title">
+              <option :value="'section:' + item.sectionId">{{ item.title }}</option>
+              <option v-for="child in item.children" :key="child.slideId" :value="'child:' + child.slideId">
+                {{ item.title }}/{{ child.title }}
+              </option>
+            </optgroup>
+          </select>
+        </label>
+        <label v-if="!contentsFocus || structure.additionalSections !== undefined" class="field">
           目次の追加項目
           <textarea
             rows="3"
@@ -95,6 +116,13 @@ const { currentSlide, slideIndex, slideStructure } = storeToRefs(slidesStore)
 const { addHistorySnapshot } = useHistorySnapshot()
 const structure = computed<SlideStructure>(() => currentSlide.value.structure || { kind: 'none' })
 const section = computed(() => slideStructure.value.sectionBySlideId.get(currentSlide.value.id))
+const childTitle = computed(() => slideStructure.value.childBySlideId.get(currentSlide.value.id)?.title)
+const focusSections = computed(() => slideStructure.value.sections.filter(item => item.sectionId))
+const contentsFocus = computed(() => {
+  const { highlightChildSlideId, highlightSectionId } = structure.value
+  if (highlightChildSlideId) return `child:${highlightChildSlideId}`
+  return highlightSectionId ? `section:${highlightSectionId}` : ''
+})
 const references = computed<NonNullable<SlideStructure['references']>>(() => {
   const list = structure.value.references
   return list?.length ? list : [{ text: '' }]
@@ -117,6 +145,20 @@ function commitInput(event: KeyboardEvent) {
 
 function editText(key: 'title' | 'subtitle', event: Event) {
   updateStructure({ [key]: valueOf(event) })
+}
+
+function setChildTitle(event: Event) {
+  updateStructure({ childTitle: valueOf(event).trim() || undefined })
+  addHistorySnapshot()
+}
+
+function setContentsFocus(event: Event) {
+  const value = valueOf(event)
+  updateStructure({
+    highlightSectionId: value.startsWith('section:') ? value.slice('section:'.length) : undefined,
+    highlightChildSlideId: value.startsWith('child:') ? value.slice('child:'.length) : undefined,
+  })
+  addHistorySnapshot()
 }
 
 function editAdditionalSections(event: Event) {

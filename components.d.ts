@@ -116,6 +116,7 @@ declare module 'vue' {
     'IIconParkOutline:rotate': typeof import('~icons/icon-park-outline/rotate')['default']
     'IIconParkOutline:round': typeof import('~icons/icon-park-outline/round')['default']
     'IIconParkOutline:rowHeight': typeof import('~icons/icon-park-outline/row-height')['default']
+    'IIconParkOutline:save': typeof import('~icons/icon-park-outline/save')['default']
     'IIconParkOutline:screenshotOne': typeof import('~icons/icon-park-outline/screenshot-one')['default']
     'IIconParkOutline:search': typeof import('~icons/icon-park-outline/search')['default']
     'IIconParkOutline:selected': typeof import('~icons/icon-park-outline/selected')['default']

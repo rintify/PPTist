@@ -2,6 +2,9 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore } from '@/store'
 
+const MIN_CANVAS_PERCENTAGE = 30
+const MAX_CANVAS_PERCENTAGE = 200
+
 export default () => {
   const mainStore = useMainStore()
   const { canvasPercentage, canvasScale, canvasDragged } = storeToRefs(mainStore)
@@ -15,12 +18,15 @@ export default () => {
   const scaleCanvas = (command: '+' | '-') => {
     let percentage = canvasPercentage.value
     const step = 5
-    const max = 200
-    const min = 30
-    if (command === '+' && percentage <= max) percentage += step
-    if (command === '-' && percentage >= min) percentage -= step
+    if (command === '+' && percentage <= MAX_CANVAS_PERCENTAGE) percentage += step
+    if (command === '-' && percentage >= MIN_CANVAS_PERCENTAGE) percentage -= step
 
     mainStore.setCanvasPercentage(percentage)
+  }
+
+  const getWheelZoomPercentage = (deltaY: number) => {
+    const percentage = canvasPercentage.value * Math.exp(-deltaY / 100)
+    return Math.min(MAX_CANVAS_PERCENTAGE, Math.max(MIN_CANVAS_PERCENTAGE, percentage))
   }
 
   /**
@@ -45,6 +51,7 @@ export default () => {
     canvasScalePercentage,
     setCanvasScalePercentage,
     scaleCanvas,
+    getWheelZoomPercentage,
     resetCanvas,
   }
 }

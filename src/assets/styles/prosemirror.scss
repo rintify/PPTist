@@ -99,3 +99,29 @@
 .ProseMirror-selectednode {
   outline: none !important;
 }
+.inline-math {
+  display: inline-block;
+  white-space: nowrap;
+  letter-spacing: normal;
+
+  .katex { font-size: 1.05em; }
+}
+
+.ProseMirror-static sup.inline-citation {
+  vertical-align: super;
+  font-size: 0.7em;
+  line-height: 0;
+}
+
+.ProseMirror, .ProseMirror-static {
+  ruby {
+    ruby-position: over;
+    ruby-align: center;
+  }
+
+  rt {
+    font-size: 0.5em;
+    line-height: 1;
+    user-select: none;
+  }
+}

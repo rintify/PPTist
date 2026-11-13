@@ -10,58 +10,57 @@ export default (canvasRef: ShallowRef<HTMLElement | null>) => {
   const { canvasPercentage, canvasDragged } = storeToRefs(mainStore)
   const { viewportRatio, viewportSize } = storeToRefs(useSlidesStore())
 
-  // 初始化画布可视区域的位置
+  const getScale = (canvas: HTMLElement, percentage: number) => {
+    const fitWidth = Math.min(canvas.clientWidth, canvas.clientHeight / viewportRatio.value)
+    return fitWidth / viewportSize.value * percentage / 100
+  }
+
   const initViewportPosition = () => {
-    if (!canvasRef.value) return
-    const canvasWidth = canvasRef.value.clientWidth
-    const canvasHeight = canvasRef.value.clientHeight
+    const canvas = canvasRef.value
+    if (!canvas) return
+    const scale = getScale(canvas, canvasPercentage.value)
+    mainStore.setCanvasScale(scale)
+    viewportLeft.value = (canvas.clientWidth - viewportSize.value * scale) / 2
+    viewportTop.value = (canvas.clientHeight - viewportSize.value * viewportRatio.value * scale) / 2
+  }
 
-    if (canvasHeight / canvasWidth > viewportRatio.value) {
-      const viewportActualWidth = canvasWidth * (canvasPercentage.value / 100)
-      mainStore.setCanvasScale(viewportActualWidth / viewportSize.value)
-      viewportLeft.value = (canvasWidth - viewportActualWidth) / 2
-      viewportTop.value = (canvasHeight - viewportActualWidth * viewportRatio.value) / 2
+  let zoomAnchor: { x: number; y: number } | undefined
+
+  watch(canvasPercentage, (percentage, previous) => {
+    const canvas = canvasRef.value
+    if (!canvas) return
+    const oldScale = getScale(canvas, previous)
+    const newScale = getScale(canvas, percentage)
+    if (oldScale > 0) {
+      const x = zoomAnchor?.x ?? viewportLeft.value + viewportSize.value * oldScale / 2
+      const y = zoomAnchor?.y ?? viewportTop.value + viewportSize.value * viewportRatio.value * oldScale / 2
+      const ratio = newScale / oldScale
+      viewportLeft.value = x + (viewportLeft.value - x) * ratio
+      viewportTop.value = y + (viewportTop.value - y) * ratio
     }
-    else {
-      const viewportActualHeight = canvasHeight * (canvasPercentage.value / 100)
-      mainStore.setCanvasScale(viewportActualHeight / (viewportSize.value * viewportRatio.value))
-      viewportLeft.value = (canvasWidth - viewportActualHeight / viewportRatio.value) / 2
-      viewportTop.value = (canvasHeight - viewportActualHeight) / 2
+    mainStore.setCanvasScale(newScale)
+  }, { flush: 'sync' })
+
+  const zoomViewportAt = (percentage: number, clientX: number, clientY: number) => {
+    const canvas = canvasRef.value
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+    zoomAnchor = { x: clientX - rect.left, y: clientY - rect.top }
+    try {
+      mainStore.setCanvasPercentage(percentage)
+    }
+    finally {
+      zoomAnchor = undefined
     }
   }
 
-  // 更新画布可视区域的位置
-  const setViewportPosition = (newValue: number, oldValue: number) => {
-    if (!canvasRef.value) return
-    const canvasWidth = canvasRef.value.clientWidth
-    const canvasHeight = canvasRef.value.clientHeight
-
-    if (canvasHeight / canvasWidth > viewportRatio.value) {      
-      const newViewportActualWidth = canvasWidth * (newValue / 100)
-      const oldViewportActualWidth = canvasWidth * (oldValue / 100)
-      const newViewportActualHeight = newViewportActualWidth * viewportRatio.value
-      const oldViewportActualHeight = oldViewportActualWidth * viewportRatio.value
-
-      mainStore.setCanvasScale(newViewportActualWidth / viewportSize.value)
-
-      viewportLeft.value = viewportLeft.value - (newViewportActualWidth - oldViewportActualWidth) / 2
-      viewportTop.value = viewportTop.value - (newViewportActualHeight - oldViewportActualHeight) / 2
-    }
-    else {
-      const newViewportActualHeight = canvasHeight * (newValue / 100)
-      const oldViewportActualHeight = canvasHeight * (oldValue / 100)
-      const newViewportActualWidth = newViewportActualHeight / viewportRatio.value
-      const oldViewportActualWidth = oldViewportActualHeight / viewportRatio.value
-
-      mainStore.setCanvasScale(newViewportActualHeight / (viewportSize.value * viewportRatio.value))
-
-      viewportLeft.value = viewportLeft.value - (newViewportActualWidth - oldViewportActualWidth) / 2
-      viewportTop.value = viewportTop.value - (newViewportActualHeight - oldViewportActualHeight) / 2
-    }
+  const panViewport = (deltaX: number, deltaY: number) => {
+    if (!deltaX && !deltaY) return
+    viewportLeft.value -= deltaX
+    viewportTop.value -= deltaY
+    mainStore.setCanvasDragged(true)
   }
 
-  // 可视区域缩放或比例变化时，重置/更新可视区域的位置
-  watch(canvasPercentage, setViewportPosition)
   watch(viewportRatio, initViewportPosition)
   watch(viewportSize, initViewportPosition)
 
@@ -119,6 +118,8 @@ export default (canvasRef: ShallowRef<HTMLElement | null>) => {
 
   return {
     viewportStyles,
+    zoomViewportAt,
+    panViewport,
     dragViewport,
   }
 }

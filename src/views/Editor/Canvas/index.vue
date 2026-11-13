@@ -126,7 +126,6 @@ import type { PPTShapeElement } from '@/types/slides'
 import type { AlignmentLineProps, CreateCustomShapeData } from '@/types/edit'
 import { injectKeySlideScale } from '@/types/injectKey'
 import { removeAllRanges } from '@/utils/selection'
-import { KEYS } from '@/configs/hotkey'
 
 import useViewportSize from './hooks/useViewportSize'
 import useMouseSelection from './hooks/useMouseSelection'
@@ -145,7 +144,6 @@ import useCopyAndPasteElement from '@/hooks/useCopyAndPasteElement'
 import useSelectElement from '@/hooks/useSelectElement'
 import useScaleCanvas from '@/hooks/useScaleCanvas'
 import useScreening from '@/hooks/useScreening'
-import useSlideHandler from '@/hooks/useSlideHandler'
 import useCreateElement from '@/hooks/useCreateElement'
 import useCanvasElementList from '@/hooks/useCanvasElementList'
 
@@ -195,7 +193,7 @@ watch(handleElementId, () => {
 const { elementList } = useCanvasElementList(currentSlide)
 
 const canvasRef = useTemplateRef<HTMLElement>('canvasRef')
-const { dragViewport, viewportStyles } = useViewportSize(canvasRef)
+const { dragViewport, viewportStyles, zoomViewportAt, panViewport } = useViewportSize(canvasRef)
 
 useDrop(canvasRef)
 
@@ -213,7 +211,6 @@ const { selectAllElements } = useSelectElement()
 const { deleteAllElements } = useDeleteElement()
 const { pasteElement } = useCopyAndPasteElement()
 const { enterScreeningFromStart } = useScreening()
-const { updateSlideIndex } = useSlideHandler()
 const { createTextElement, createShapeElement } = useCreateElement()
 
 // 组件渲染时，如果存在元素焦点，需要清除
@@ -263,23 +260,30 @@ const removeEditorAreaFocus = () => {
   if (editorAreaFocus.value) mainStore.setEditorareaFocus(false)
 }
 
-// 滚动鼠标
-const { scaleCanvas } = useScaleCanvas()
+const { scaleCanvas, getWheelZoomPercentage } = useScaleCanvas()
 const throttleScaleCanvas = throttle(scaleCanvas, 100, { leading: true, trailing: false })
-const throttleUpdateSlideIndex = throttle(updateSlideIndex, 300, { leading: true, trailing: false })
 
 const handleMousewheelCanvas = (e: WheelEvent) => {
   e.preventDefault()
 
-  // 按住Ctrl键时：缩放画布
-  if (ctrlKeyState.value) {
-    if (e.deltaY > 0) throttleScaleCanvas('-')
-    else if (e.deltaY < 0) throttleScaleCanvas('+')
+  const mode = e.deltaMode
+  // Chrome sends trackpad pinch as a Ctrl-wheel event without a Ctrl keydown.
+  if (e.ctrlKey && !ctrlKeyState.value && mode === WheelEvent.DOM_DELTA_PIXEL) {
+    if (e.deltaY) zoomViewportAt(getWheelZoomPercentage(e.deltaY), e.clientX, e.clientY)
+    return
   }
-  // 上下翻页
+  if (e.ctrlKey || e.metaKey || ctrlKeyState.value) {
+    if (e.deltaY) throttleScaleCanvas(e.deltaY > 0 ? '-' : '+')
+    return
+  }
+
+  const canvas = canvasRef.value
+  if (mode === WheelEvent.DOM_DELTA_PAGE && canvas) {
+    panViewport(e.deltaX * canvas.clientWidth, e.deltaY * canvas.clientHeight)
+  }
   else {
-    if (e.deltaY > 0) throttleUpdateSlideIndex(KEYS.DOWN)
-    else if (e.deltaY < 0) throttleUpdateSlideIndex(KEYS.UP)
+    const unit = mode === WheelEvent.DOM_DELTA_LINE ? 16 : 1
+    panViewport(e.deltaX * unit, e.deltaY * unit)
   }
 }
 

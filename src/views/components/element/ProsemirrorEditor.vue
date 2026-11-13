@@ -1,14 +1,22 @@
 <template>
-  <div 
+  <div
+    v-if="showInlinePreview"
+    class="inline-text-preview ProseMirror-static"
+    aria-hidden="true"
+    v-html="inlinePreview"
+  ></div>
+  <div
+    v-bind="$attrs"
     class="prosemirror-editor" 
-    :class="{ 'format-painter': textFormatPainter }"
+    :class="{ 'format-painter': textFormatPainter, 'inline-source-hidden': showInlinePreview }"
     ref="editorViewRef"
     @mousedown="$event => emit('mousedown', $event)"
   ></div>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
+import { nanoid } from 'nanoid'
 import { debounce } from 'lodash'
 import { storeToRefs } from 'pinia'
 import { useKeyboardStore, useMainStore } from '@/store'
@@ -21,10 +29,14 @@ import { alignmentCommand } from '@/utils/prosemirror/commands/setTextAlign'
 import { indentCommand, textIndentCommand } from '@/utils/prosemirror/commands/setTextIndent'
 import { toggleList } from '@/utils/prosemirror/commands/toggleList'
 import { setListStyle } from '@/utils/prosemirror/commands/setListStyle'
+import { getRubySelection } from '@/utils/prosemirror/commands/ruby'
 import { replaceText } from '@/utils/prosemirror/commands/replaceText'
 import type { TextFormatPainterKeys } from '@/types/edit'
 import message from '@/utils/message'
+import { renderInlineText } from '@/utils/inlineText'
 import { KEYS } from '@/configs/hotkey'
+
+defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(defineProps<{
   elementId: string
@@ -33,6 +45,9 @@ const props = withDefaults(defineProps<{
   value: string
   editable?: boolean
   autoFocus?: boolean
+  inlinePreview?: boolean
+  inlineCitations?: boolean
+  caption?: boolean
 }>(), {
   editable: false,
   autoFocus: false,
@@ -51,6 +66,9 @@ const { ctrlOrShiftKeyActive } = storeToRefs(useKeyboardStore())
 
 const editorViewRef = useTemplateRef<HTMLElement>('editorViewRef')
 let editorView: EditorView
+const focused = ref(false)
+const inlinePreview = computed(() => props.inlinePreview ? renderInlineText(props.value, { citations: props.inlineCitations, caption: props.caption }).html : '')
+const showInlinePreview = computed(() => !focused.value && !!inlinePreview.value && inlinePreview.value !== props.value)
 
 // 富文本的各种交互事件监听：
 // 聚焦时取消全局快捷键事件
@@ -65,6 +83,7 @@ const handleInput = debounce(function(isHanldeHistory = false) {
 }, 300, { trailing: true })
 
 const handleFocus = () => {
+  focused.value = true
   // 多选且按下了ctrl或shift键时，不禁用全局快捷键
   if (!ctrlOrShiftKeyActive.value || activeElementIdList.value.length <= 1) {
     mainStore.setDisableHotkeysState(true)
@@ -73,6 +92,8 @@ const handleFocus = () => {
 }
 
 const handleBlur = () => {
+  handleInput.flush()
+  focused.value = false
   mainStore.setDisableHotkeysState(false)
   emit('blur')
 }
@@ -256,6 +277,25 @@ const execCommand = ({ target, action }: RichTextCommand) => {
         toggleMark(markType, { href: item.value, title: item.value })(editorView.state, editorView.dispatch)
       }
     }
+    else if (item.command === 'ruby') {
+      const { state } = editorView
+      const selection = props.editable ? getRubySelection(state) : undefined
+      if (!selection) continue
+      const { from, to, existing } = selection
+      const ruby = state.schema.marks.ruby
+      const transaction = state.tr.removeMark(from, to, ruby)
+      if (item.value) {
+        const size = existing?.attrs.size ?? getFontsize(editorView) / 2
+        transaction.addMark(from, to, ruby.create({
+          id: existing?.attrs.id || nanoid(10),
+          reading: item.value,
+          size: Number.isFinite(size) ? size : null,
+        }))
+      }
+      editorView.dispatch(transaction)
+      handleInput()
+      handleInput.flush()
+    }
     else if (item.command === 'insert' && item.value) {
       editorView.dispatch(editorView.state.tr.insertText(item.value))
     }
@@ -292,6 +332,7 @@ onMounted(() => {
       focus: handleFocus,
       blur: handleBlur,
       keydown: handleKeydown,
+      input: () => { handleInput() },
       click: handleClick,
       mouseup: handleMouseup,
     },
@@ -300,7 +341,9 @@ onMounted(() => {
   if (props.autoFocus) editorView.focus()
 })
 onUnmounted(() => {
-  editorView && editorView.destroy()
+  handleInput.cancel()
+  handleClick.cancel()
+  editorView?.destroy()
 })
 
 const syncAttrsToStore = () => {
@@ -308,15 +351,35 @@ const syncAttrsToStore = () => {
   handleClick()
 }
 
+const readRubySelection = ({ target, receive }: {
+  target: string
+  receive: (selection: { text: string; reading: string }) => void
+}) => {
+  if (!props.editable || target !== props.elementId) return
+  const selection = getRubySelection(editorView.state)
+  if (selection) receive(selection)
+}
+
+emitter.on(EmitterEvents.RUBY_SELECTION, readRubySelection)
 emitter.on(EmitterEvents.RICH_TEXT_COMMAND, execCommand)
 emitter.on(EmitterEvents.SYNC_RICH_TEXT_ATTRS_TO_STORE, syncAttrsToStore)
 onUnmounted(() => {
+  emitter.off(EmitterEvents.RUBY_SELECTION, readRubySelection)
   emitter.off(EmitterEvents.RICH_TEXT_COMMAND, execCommand)
   emitter.off(EmitterEvents.SYNC_RICH_TEXT_ATTRS_TO_STORE, syncAttrsToStore)
 })
 </script>
 
 <style lang="scss" scoped>
+.inline-text-preview {
+  pointer-events: none;
+}
+.prosemirror-editor.inline-source-hidden {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+}
 .prosemirror-editor {
   cursor: text;
 

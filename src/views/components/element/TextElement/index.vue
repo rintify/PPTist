@@ -24,7 +24,7 @@
           textShadow: shadowStyle,
           lineHeight: elementInfo.lineHeight,
           letterSpacing: (elementInfo.wordSpace || 0) + 'px',
-          color: elementInfo.defaultColor,
+          color: elementInfo.textTemplate?.kind === 'caption' ? MUTED_SLIDE_TEXT : elementInfo.defaultColor,
           fontFamily: elementInfo.defaultFontName,
           writingMode: elementInfo.vertical ? 'vertical-rl' : 'horizontal-tb',
           padding: `${inset[0]}px ${inset[1]}px ${inset[2]}px ${inset[3]}px`,
@@ -44,10 +44,13 @@
         />
         <ProsemirrorEditor
           class="text"
+          inline-preview
+          :caption="elementInfo.textTemplate?.kind === 'caption'"
+          :inline-citations="elementInfo.textType !== 'footer'"
           :elementId="elementInfo.id"
           :defaultColor="elementInfo.defaultColor"
           :defaultFontName="elementInfo.defaultFontName"
-          :editable="!elementInfo.lock"
+          :editable="!elementInfo.lock && elementInfo.textTemplate?.kind !== 'caption'"
           :value="elementInfo.content"
           @update="({ value, ignore }) => updateContent(value, ignore)"
           @mousedown="$event => handleSelectElement($event, false)"
@@ -66,6 +69,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch, useTemplateRef,
 import { storeToRefs } from 'pinia'
 import { debounce } from 'lodash'
 import { useMainStore, useSlidesStore } from '@/store'
+import { MUTED_SLIDE_TEXT } from '@/configs/slideAppearance'
 import type { PPTTextElement } from '@/types/slides'
 import type { ContextmenuItem } from '@/components/Contextmenu/types'
 import useElementShadow from '@/views/components/element/hooks/useElementShadow'
@@ -200,7 +204,7 @@ const updateContent = (content: string, ignore = false) => {
 
 const checkEmptyText = debounce(function() {
   const pureText = props.elementInfo.content.replace(/<[^>]+>/g, '')
-  if (!pureText) slidesStore.deleteElement(props.elementInfo.id)
+  if (!pureText && props.elementInfo.textTemplate?.kind !== 'caption') slidesStore.deleteElement(props.elementInfo.id)
 }, 300, { trailing: true })
 
 const isHandleElement = computed(() => handleElementId.value === props.elementInfo.id)

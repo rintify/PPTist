@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
+import localProjectSave from './dev/localProjectSave'
 import vue from '@vitejs/plugin-vue'
 import Icons from 'unplugin-icons/vite'
 import { FileSystemIconLoader } from 'unplugin-icons/loaders'
@@ -10,6 +11,7 @@ import Components from 'unplugin-vue-components/vite'
 export default defineConfig({
   base: '',
   plugins: [
+    localProjectSave(),
     vue(),
     Components({
       dirs: [],

@@ -31,6 +31,30 @@
       </Select>
     </SelectGroup>
 
+    <Popover
+      v-if="handleElement?.type === 'text'"
+      class="row"
+      trigger="manual"
+      placement="bottom-end"
+      v-model:value="rubyPopoverVisible"
+    >
+      <template #content>
+        <div class="ruby-popover" @keydown.stop @paste.stop>
+          <div class="ruby-target">{{ rubyTarget }}</div>
+          <label>
+            ふりがな
+            <input v-model="rubyReading" autocomplete="off" @keydown.enter="confirmRuby">
+          </label>
+          <div class="ruby-actions">
+            <Button size="small" @click="rubyPopoverVisible = false">キャンセル</Button>
+            <Button v-if="rubyExisting" size="small" @click="applyRuby('')">削除</Button>
+            <Button size="small" type="primary" :disabled="!rubyReading.trim()" @click="applyRuby(rubyReading)">設定</Button>
+          </div>
+        </div>
+      </template>
+      <Button style="width: 100%;" @mousedown.prevent @click="openRubyPopover">ルビ</Button>
+    </Popover>
+
     <ButtonGroup class="row" passive>
       <Popover trigger="click" style="width: 30%;">
         <template #content>
@@ -304,6 +328,39 @@ const indentRightPanelVisible = ref(false)
 const bulletListStyleTypeOption = ref(['disc', 'circle', 'square'])
 const orderedListStyleTypeOption = ref(['decimal', 'lower-roman', 'upper-roman', 'lower-alpha', 'upper-alpha', 'lower-greek'])
 
+const rubyPopoverVisible = ref(false)
+const rubyTarget = ref('')
+const rubyReading = ref('')
+const rubyExisting = ref(false)
+
+function openRubyPopover() {
+  let found = false
+  emitter.emit(EmitterEvents.RUBY_SELECTION, {
+    target: handleElementId.value,
+    receive: ({ text, reading }) => {
+      found = true
+      rubyTarget.value = text
+      rubyReading.value = reading
+      rubyExisting.value = !!reading
+      rubyPopoverVisible.value = true
+    },
+  })
+  if (!found) message.info('ルビを付ける文字を選択してください')
+}
+
+function confirmRuby(event: KeyboardEvent) {
+  if (event.isComposing) return
+  event.preventDefault()
+  applyRuby(rubyReading.value)
+}
+
+function applyRuby(value: string) {
+  const reading = value.trim()
+  if (!reading && !rubyExisting.value) return
+  emitRichTextCommand('ruby', reading)
+  rubyPopoverVisible.value = false
+}
+
 const link = ref('')
 const linkPopoverVisible = ref(false)
 const AIPopoverVisible = ref(false)
@@ -311,6 +368,7 @@ const isAIWriting = ref(false)
 
 watch(richTextAttrs, () => linkPopoverVisible.value = false)
 watch(handleElementId, () => {
+  rubyPopoverVisible.value = false
   if (isAIWriting.value) isAIWriting.value = false
 })
 
@@ -380,6 +438,17 @@ const execAI = async (command: string) => {
 </script>
 
 <style lang="scss" scoped>
+.ruby-popover {
+  display: grid;
+  gap: 8px;
+  max-width: 240px;
+
+  label { display: grid; gap: 4px; }
+  input { border: 1px solid $borderColor; padding: 5px 8px; border-radius: $borderRadius; }
+  .ruby-target { overflow-wrap: anywhere; }
+  .ruby-actions { display: flex; justify-content: flex-end; gap: 6px; }
+}
+
 .rich-text-base {
   user-select: none;
 

@@ -43,6 +43,8 @@
             </div>
           </div>
           <Divider :margin="10" />
+          <PopoverMenuItem class="popover-menu-item" @click="copySlideReference(); mainMenuVisible = false"><i-icon-park-outline:copy class="icon" /> 編集箇所の参照をコピー</PopoverMenuItem>
+          <PopoverMenuItem class="popover-menu-item" @click="saveProject(); mainMenuVisible = false"><i-icon-park-outline:save class="icon" /> 保存</PopoverMenuItem>
           <PopoverMenuItem class="popover-menu-item" @click="setDialogForExport('pptx')"><i-icon-park-outline:download class="icon" /> ファイルを書き出す</PopoverMenuItem>
           <Divider :margin="10" />
           <PopoverMenuItem class="popover-menu-item" @click="resetSlides(); mainMenuVisible = false"><i-icon-park-outline:refresh class="icon" /> スライドをリセット</PopoverMenuItem>
@@ -114,6 +116,8 @@
 import { nextTick, ref, useTemplateRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
+import useCopySlideReference from '@/hooks/useCopySlideReference'
+import useProjectSave from '@/hooks/useProjectSave'
 import useScreening from '@/hooks/useScreening'
 import useImport from '@/hooks/useImport'
 import useSlideHandler from '@/hooks/useSlideHandler'
@@ -133,6 +137,8 @@ const slidesStore = useSlidesStore()
 const { title } = storeToRefs(slidesStore)
 const { enterScreening, enterScreeningFromStart } = useScreening()
 const { importSpecificFile, importPPTXFile, importJSON, exporting } = useImport()
+const copySlideReference = useCopySlideReference()
+const { saveProject } = useProjectSave()
 const { resetSlides } = useSlideHandler()
 
 const mainMenuVisible = ref(false)

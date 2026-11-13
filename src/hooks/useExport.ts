@@ -9,11 +9,14 @@ import type { PPTElementOutline, PPTElementShadow, PPTElementLink, Slide } from 
 import { getElementRange, getLineElementPath, getTableSubThemeColor } from '@/utils/element'
 import { type AST, toAST } from '@/utils/htmlParser'
 import { type SvgPoints, toPoints } from '@/utils/svgPathParser'
-import { encrypt } from '@/utils/crypto'
+import { createPptistFile } from '@/utils/pptistFile'
 import { svg2Base64 } from '@/utils/svg2Base64'
 import message from '@/utils/message'
 import { parseTableText, serializeTableText } from '@/utils/prosemirror/table'
 
+import { MUTED_SLIDE_TEXT } from '@/configs/slideAppearance'
+import { renderInlineText } from '@/utils/inlineText'
+import BaseTextElement from '@/views/components/element/TextElement/BaseTextElement.vue'
 import BaseLatexElement from '@/views/components/element/LatexElement/BaseLatexElement.vue'
 import BaseShapeElement from '@/views/components/element/ShapeElement/BaseShapeElement.vue'
 
@@ -78,57 +81,42 @@ export default () => {
     }, 200)
   }
 
-  // 导出图片版PPTX
-  const exportImagePPTX = (domRefs: NodeListOf<Element>) => {
+  const exportImagePPTX = async (
+    selectedSlides: Slide[],
+    renderSlide: (slide: Slide, page: number) => Promise<HTMLElement>,
+  ) => {
+    if (exporting.value || !selectedSlides.length) return
     exporting.value = true
-    
-    setTimeout(() => {
+    const filename = `${title.value}-images.pptx`
+
+    try {
       const pptx = new pptxgen()
       setPPTXLayout(pptx)
 
-      const config: ExportImageConfig = {
-        quality: 1,
-        width: 1600,
-      }
-
-      const promiseArr = []
-      for (const domRef of domRefs) {
-        const foreignObjectSpans = domRef.querySelectorAll('foreignObject [xmlns]')
-        foreignObjectSpans.forEach(spanRef => spanRef.removeAttribute('xmlns'))
-
-        const promiseFunc = () => toJpeg((domRef as HTMLElement), config)
-        promiseArr.push(promiseFunc)
-      }
-
-      Promise.all(promiseArr.map(func => func())).then(imgs => {
-        for (const data of imgs) {
-          const pptxSlide = pptx.addSlide()
-          pptxSlide.addImage({
-            data,
-            x: 0,
-            y: 0,
-            w: viewportSize.value / ratioPx2Inch.value,
-            h: viewportSize.value * viewportRatio.value / ratioPx2Inch.value,
-          })
+      for (const [index, slide] of selectedSlides.entries()) {
+        const thumbnail = await renderSlide(slide, index + 1)
+        thumbnail.querySelectorAll('foreignObject [xmlns]').forEach(el => el.removeAttribute('xmlns'))
+        const data = await toPng(thumbnail, { pixelRatio: 1, backgroundColor: '#ffffff' })
+        if (!data.startsWith('data:image/png;base64,')) {
+          throw new Error('Could not rasterize slide ' + (index + 1))
         }
-        pptx.writeFile({ fileName: `${title.value}.pptx` }).then(() => exporting.value = false)
-      }).catch(() => {
-        exporting.value = false
-        message.error('書き出せませんでした')
-      })
-    }, 200)
+        pptx.addSlide().addImage({ data, x: 0, y: 0, w: '100%', h: '100%' })
+      }
+
+      await pptx.writeFile({ fileName: filename })
+    }
+    catch (error) {
+      console.error('Image PPTX export failed', error)
+      message.error('画像のPPTXを書き出せませんでした')
+    }
+    finally {
+      exporting.value = false
+    }
   }
   
   // 导出pptist文件（特有 .pptist 后缀文件）
   const exportSpecificFile = (_slides: Slide[]) => {
-    const json = {
-      title: title.value,
-      width: viewportSize.value,
-      height: viewportSize.value * viewportRatio.value,
-      theme: theme.value,
-      slides: _slides,
-    }
-    const blob = new Blob([encrypt(JSON.stringify(json))], { type: '' })
+    const blob = new Blob([createPptistFile(slidesStore, _slides)])
     saveAs(blob, `${title.value}.pptist`)
   }
   
@@ -238,6 +226,10 @@ export default () => {
           }
           if (item.tagName === 'sup') {
             styleObj['vertical-align'] = 'super'
+            if (item.attributes.some(attr => attr.key === 'class' && attr.value === 'inline-citation')) {
+              const baseSize = parseFloat(styleObj['font-size']) || defaultFontSize
+              styleObj['font-size'] = `${baseSize * 0.7}px`
+            }
           }
           if (item.tagName === 'sub') {
             styleObj['vertical-align'] = 'sub'
@@ -557,7 +549,38 @@ export default () => {
 
       for (const el of [...slide.elements, ...(structureElements[slide.id] || [])]) {
         if (el.type === 'text') {
-          const textProps = formatHTML(el.content)
+          const caption = el.textTemplate?.kind === 'caption'
+          const { html, hasMath } = renderInlineText(el.content, { citations: el.textType !== 'footer', caption })
+          if (hasMath || /<ruby[\s>]/i.test(html)) {
+            const container = document.createElement('div')
+            container.style.cssText = 'position:absolute;left:-100000px;top:0'
+            document.body.append(container)
+            try {
+              render(createVNode(BaseTextElement, { elementInfo: { ...el, top: 0, left: 0, rotate: 0 } }), container)
+              const text = container.firstElementChild as HTMLElement
+              await document.fonts.ready
+              const fontEmbedCSS = await getFontEmbedCSS(text, { preferredFontFormat: 'woff2' })
+              const data = await toPng(text, { fontEmbedCSS, pixelRatio: 2 })
+              pptxSlide.addImage({
+                data,
+                x: el.left / ratioPx2Inch.value, y: el.top / ratioPx2Inch.value,
+                w: el.width / ratioPx2Inch.value, h: el.height / ratioPx2Inch.value,
+                rotate: el.rotate,
+                hyperlink: el.link ? getLinkOption(el.link, _slides) || undefined : undefined,
+              })
+            }
+            catch {
+              exporting.value = false
+              message.error('数式やルビを含むテキストを書き出せませんでした')
+              return
+            }
+            finally {
+              render(null, container)
+              container.remove()
+            }
+            continue
+          }
+          const textProps = formatHTML(html)
           const link = el.link && getLinkOption(el.link, _slides)
           if (link) {
             for (const run of textProps) {
@@ -588,7 +611,8 @@ export default () => {
             const opacity = el.opacity === undefined ? 1 : el.opacity
             options.fill = { color: c.color, transparency: (1 - c.alpha * opacity) * 100 }
           }
-          if (el.defaultColor) options.color = formatColor(el.defaultColor).color
+          if (caption) options.color = formatColor(MUTED_SLIDE_TEXT).color
+          else if (el.defaultColor) options.color = formatColor(el.defaultColor).color
           if (el.defaultFontName) options.fontFace = formatFontFace(el.defaultFontName)
           if (el.shadow) options.shadow = getShadowOption(el.shadow)
           if (el.outline?.width) options.line = getOutlineOption(el.outline)

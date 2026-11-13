@@ -14,6 +14,8 @@ import useMoveElement from './useMoveElement'
 import useOrderElement from './useOrderElement'
 import useHistorySnapshot from './useHistorySnapshot'
 import useScreening from './useScreening'
+import useCopySlideReference from './useCopySlideReference'
+import useProjectSave from './useProjectSave'
 import useScaleCanvas from './useScaleCanvas'
 
 export default () => {
@@ -125,6 +127,21 @@ export default () => {
     mainStore.setActiveElementIdList([nextElementId])
   }
 
+  const { saveProject } = useProjectSave()
+  const copySlideReference = useCopySlideReference()
+  const editorShortcutListener = (e: KeyboardEvent) => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return
+    const key = e.key.toUpperCase()
+    const save = key === KEYS.S && !e.shiftKey
+    const copyReference = key === KEYS.L && (e.metaKey || e.shiftKey)
+    if (!save && !copyReference) return
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.repeat || e.isComposing) return
+    if (save) void saveProject()
+    else void copySlideReference()
+  }
+
   const keydownListener = (e: KeyboardEvent) => {
     const { ctrlKey, shiftKey, altKey, metaKey } = e
     const ctrlOrMetaKeyActive = ctrlKey || metaKey
@@ -205,7 +222,7 @@ export default () => {
       e.preventDefault()
       selectAll()
     }
-    if (ctrlOrMetaKeyActive && key === KEYS.L) {
+    if (ctrlKey && !shiftKey && key === KEYS.L) {
       if (disableHotkeys.value) return
       e.preventDefault()
       lock()
@@ -308,11 +325,13 @@ export default () => {
   }
 
   onMounted(() => {
+    document.addEventListener('keydown', editorShortcutListener, true)
     document.addEventListener('keydown', keydownListener)
     document.addEventListener('keyup', keyupListener)
     window.addEventListener('blur', keyupListener)
   })
   onUnmounted(() => {
+    document.removeEventListener('keydown', editorShortcutListener, true)
     document.removeEventListener('keydown', keydownListener)
     document.removeEventListener('keyup', keyupListener)
     window.removeEventListener('blur', keyupListener)
